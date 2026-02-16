@@ -65,8 +65,10 @@ Statistics
   <img height="155em" src="https://streak-stats.demolab.com/?user=abisinraj&theme=transparent&hide_border=true&ring=d6bb6a&fire=d6bb6a&currStreakLabel=d6bb6a&sideNums=ffffff&sideLabels=aaaaaa" />
 </div>
 
+</div>
+
 <div style="margin-top:20px; text-align:left;">
-  <img src="https://raw.githubusercontent.com/abisinraj/abisinraj/output/github-contribution-grid-snake-dark.svg" />
+  <img src="https://raw.githubusercontent.com/abisinraj/abisinraj/output-tetris/github-contribution-grid-tetris.gif" />
 </div>
 
 </div>
