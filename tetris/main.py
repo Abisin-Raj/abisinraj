@@ -145,9 +145,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        contributions = get_github_contributions(args.username, args.year)
+        current_year = datetime.now().year
+        # Fetch current and previous year to get a full rolling window
+        contributions_current = get_github_contributions(args.username, current_year)
+        contributions_prev = get_github_contributions(args.username, current_year - 1)
+        
+        # Combine and sort by date just in case
+        all_contributions = contributions_prev + contributions_current
+        
         # Ensure output directory matches where we run it from or absolute path
-        create_tetris_gif(args.username, args.year, contributions, 'tetris_github.gif')
+        create_tetris_gif(args.username, current_year, all_contributions, 'tetris_github.gif')
         print("GIF created successfully!")
     except Exception as e:
         print(e)
