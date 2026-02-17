@@ -131,19 +131,9 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
             continue
 
         if value == 0:
-            # SHATTER MECHANIC: Grey blocks break and show a message
-            if date and date < '2025-09-01':
-                messages = [
-                    "USER DIDNT DISCOVER GITHUB YET",
-                    "PRE-GITHUB DISCOVERY",
-                    "SEARCHING FOR GIT...",
-                    "DISCOVERING GITHUB..."
-                ]
-            else:
-                messages = ["REST", "IDLE", "RECHARGE", "ZEN", "PAUSE", "OFF"]
-            
-            msg = random.choice(messages)
-            msg_font = get_font(24)
+            # SHATTER MECHANIC: Grey blocks break without a message
+            msg = ""
+            msg_font = None
         else:
             msg = ""
             msg_font = None
@@ -155,14 +145,11 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
                 draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, contributions)
                 draw_grid(draw, grid, cell_size, colors)
 
-                # Draw "shattered" fragments
+                # Double offsets: +2px padding
                 x_base = week * cell_size + legend_width
                 y_base = step * cell_size + 40
                 
-                if value == 0:
-                    # Draw falling TEXT instead of block
-                    draw.text((x_base + 6, y_base + 6), msg, font=get_font(18), fill=theme_colors['text'])
-                else:
+                if value != 0:
                     # Draw falling block for active days
                     x0, y0 = x_base + 2, y_base + 2
                     x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
@@ -172,11 +159,12 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
                         fill=colors[value],
                         outline=(255, 255, 255, 50)
                     )
+                # Note: value == 0 (grey blocks) don't fall as blocks anymore, they just shatter at the end
 
                 frames.append(img)
 
         if value == 0:
-            # 4-frame shatter animation for words
+            # 4-frame shatter animation (just fragments, no words)
             for frame_idx in range(4):
                 img = Image.new('RGB', (image_width, image_height), background_color)
                 draw = ImageDraw.Draw(img)
@@ -187,9 +175,7 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
                 x_base = week * cell_size + legend_width
                 y_base = day * cell_size + 40
                 
-                # Draw the breaking message (fade out)
                 alpha = 255 - (frame_idx * 60)
-                draw.text((x_base + 10, y_base - 20), msg, font=msg_font, fill=(theme_colors['text'][0], theme_colors['text'][1], theme_colors['text'][2], alpha))
                 
                 # Scattered fragments
                 for _ in range(5):
