@@ -2,6 +2,7 @@ import argparse
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+from typing import List, Tuple, Dict, TypedDict
 
 
 
@@ -51,7 +52,12 @@ def create_tetris_gif(username, year, contributions, output_path, theme, year_ra
     image_height = height * cell_size + 20  # Reduced height since credits are removed
 
     # Theme Configuration
-    THEMES = {
+    class Theme(TypedDict):
+        background: str
+        text: Tuple[int, int, int]
+        colors: List[str]
+
+    THEMES: Dict[str, Theme] = {
         'light': {
             'background': '#ffffff',
             'text': (36, 41, 47),
@@ -70,7 +76,8 @@ def create_tetris_gif(username, year, contributions, output_path, theme, year_ra
 
     frames = []
     # Initialize grid with background color index (0)
-    grid = [[0] * height for _ in range(width)]
+    # Initialize grid with background color index (0)
+    grid: List[List[int]] = [[0] * height for _ in range(width)]
 
     for i, (date, count) in enumerate(contributions):
         week = i // 7
