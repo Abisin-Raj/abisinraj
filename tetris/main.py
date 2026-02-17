@@ -26,31 +26,29 @@ def draw_grid(draw, grid, cell_size, colors):
             # Block
             draw.rounded_rectangle([x0, y0, x1, y1], radius=2, fill=color, outline=(255, 255, 255, 20))
 
-def draw_legend(draw, cell_size, image_width, image_height, username, year):
+def draw_legend(draw, cell_size, image_width, image_height, username, year, theme_colors):
     # Draw day names
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for i, day in enumerate(days):
         y = i * cell_size + 20
-        draw.text((5, y), day, fill=(36, 41, 47)) # GitHub Light Text Color
+        draw.text((5, y), day, fill=theme_colors['text'])
 
     # Draw month names
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     month_positions = {1: 0, 2: 4, 3: 8, 4: 12, 5: 16, 6: 20, 7: 24, 8: 28, 9: 32, 10: 36, 11: 40, 12: 44}
     for month, week in month_positions.items():
         x = week * cell_size + 40
-        draw.text((x, 5), months[month - 1], fill=(36, 41, 47)) # GitHub Light Text Color
+        draw.text((x, 5), months[month - 1], fill=theme_colors['text'])
 
-    # Draw GitHub username and year in top left
-    text = f"{year - 1} - {year}"
-    draw.text((5, 5), text, fill=(36, 41, 47)) # GitHub Light Text Color
+    # Removed year text as requested to prevent overlap
 
-    # Add black bar below months with "Credits: DEBBAWEB" aligned to the right
+    # Add bar below months with "Credits: DEBBAWEB" aligned to the right
     legend_width = 40
     bar_height = 20
     bar_y = image_height - bar_height  # Position at the bottom of the image
     
     # Background for credits bar (matches main background)
-    draw.rectangle([legend_width, bar_y, image_width, image_height], fill=(255, 255, 255))
+    draw.rectangle([legend_width, bar_y, image_width, image_height], fill=theme_colors['background'])
 
     credits_text = f"@{username} - Credits: DEBBAWEB"
     font = ImageFont.load_default()  # Load default font
@@ -60,9 +58,9 @@ def draw_legend(draw, cell_size, image_width, image_height, username, year):
     
     text_x = image_width - text_width - 5
     text_y = bar_y + (bar_height - text_height) // 2
-    draw.text((text_x, text_y), credits_text, fill=(36, 41, 47), font=font)  # Draw text with specified font
+    draw.text((text_x, text_y), credits_text, fill=theme_colors['text'], font=font)  # Draw text with specified font
 
-def create_tetris_gif(username, year, contributions, output_path):
+def create_tetris_gif(username, year, contributions, output_path, theme, year_range):
     width = 53  # 53 weeks
     height = 7  # 7 days per week
     cell_size = 20
@@ -70,14 +68,26 @@ def create_tetris_gif(username, year, contributions, output_path):
     image_width = width * cell_size + legend_width
     image_height = height * cell_size + 40  # Increased to accommodate legend and credits bar
 
-    # GitHub Light Mode Contributions Colors
-    # 0: Background/Empty, 1: Low, 2: Med-Low, 3: Med-High, 4: High
-    colors = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
+    # Theme Configuration
+    THEMES = {
+        'light': {
+            'background': '#ffffff',
+            'text': (36, 41, 47),
+            'colors': ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
+        },
+        'dark': {
+            'background': '#0d1117',
+            'text': (201, 209, 217), # GitHub Dark Text
+            'colors': ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353']
+        }
+    }
     
-    # GitHub Light Background
-    background_color = '#ffffff'
+    theme_colors = THEMES.get(theme, THEMES['light'])
+    colors = theme_colors['colors']
+    background_color = theme_colors['background']
 
     frames = []
+    # Initialize grid with background color index (0)
     grid = [[0] * height for _ in range(width)]
 
     for i, (date, count) in enumerate(contributions):
@@ -100,7 +110,7 @@ def create_tetris_gif(username, year, contributions, output_path):
             if step % 2 == 0:  # Add frames for every second step only
                 img = Image.new('RGB', (image_width, image_height), background_color)
                 draw = ImageDraw.Draw(img)
-                draw_legend(draw, cell_size, image_width, image_height, username, year)
+                draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors)
                 draw_grid(draw, grid, cell_size, colors)
 
                 # Draw moving block
@@ -121,7 +131,7 @@ def create_tetris_gif(username, year, contributions, output_path):
         for alpha in range(0, 256, 50):  # Larger steps to make the fade faster
             img = Image.new('RGB', (image_width, image_height), background_color)
             draw = ImageDraw.Draw(img)
-            draw_legend(draw, cell_size, image_width, image_height, username, year)
+            draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors)
             draw_grid(draw, grid, cell_size, colors)
 
             x0, y0 = week * cell_size + legend_width, day * cell_size + 20
@@ -142,6 +152,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate a GitHub contributions Tetris GIF.')
     parser.add_argument('-u', '--username', type=str, required=True, help='GitHub username')
     parser.add_argument('-y', '--year', type=int, default=datetime.now().year, help='Year for contributions')
+    parser.add_argument('--theme', type=str, choices=['light', 'dark'], default='light', help='Theme argument (light/dark)')
+    parser.add_argument('--output', type=str, default='tetris_github.gif', help='Output file name')
     
     args = parser.parse_args()
 
@@ -158,8 +170,10 @@ if __name__ == "__main__":
         # This gives us the rolling year window
         rolling_contributions = all_contributions[-371:]
         
+        year_range = f"{current_year - 1} - {current_year}"
+        
         # Ensure output directory matches where we run it from or absolute path
-        create_tetris_gif(args.username, current_year, rolling_contributions, 'tetris_github.gif')
+        create_tetris_gif(args.username, current_year, rolling_contributions, args.output, args.theme, year_range)
         print("GIF created successfully!")
     except Exception as e:
         print(e)
