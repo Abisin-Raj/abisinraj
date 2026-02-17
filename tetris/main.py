@@ -35,18 +35,18 @@ def draw_legend(draw, cell_size, image_width, image_height, username, year):
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for i, day in enumerate(days):
         y = i * cell_size + 20
-        draw.text((5, y), day, fill=(139, 148, 158)) # GitHub Dimmed Text Color
+        draw.text((5, y), day, fill=(36, 41, 47)) # GitHub Light Text Color
 
     # Draw month names
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     month_positions = {1: 0, 2: 4, 3: 8, 4: 12, 5: 16, 6: 20, 7: 24, 8: 28, 9: 32, 10: 36, 11: 40, 12: 44}
     for month, week in month_positions.items():
         x = week * cell_size + 40
-        draw.text((x, 5), months[month - 1], fill=(139, 148, 158)) # GitHub Dimmed Text Color
+        draw.text((x, 5), months[month - 1], fill=(36, 41, 47)) # GitHub Light Text Color
 
     # Draw GitHub username and year in top left
     text = f"{year}"
-    draw.text((5, 5), text, fill=(139, 148, 158)) # GitHub Dimmed Text Color
+    draw.text((5, 5), text, fill=(36, 41, 47)) # GitHub Light Text Color
 
     # Add black bar below months with "Credits: DEBBAWEB" aligned to the right
     legend_width = 40
@@ -54,14 +54,14 @@ def draw_legend(draw, cell_size, image_width, image_height, username, year):
     bar_y = image_height - bar_height  # Position at the bottom of the image
     
     # Background for credits bar (matches main background)
-    draw.rectangle([legend_width, bar_y, image_width, image_height], fill=(13, 17, 23))
+    draw.rectangle([legend_width, bar_y, image_width, image_height], fill=(255, 255, 255))
 
     credits_text = f"@{username} - Credits: DEBBAWEB"
     font = ImageFont.load_default()  # Load default font
     text_width, text_height = textsize(credits_text, font=font)  # Calculate text size
     text_x = image_width - text_width - 5
     text_y = bar_y + (bar_height - text_height) // 2
-    draw.text((text_x, text_y), credits_text, fill=(139, 148, 158), font=font)  # Draw text with specified font
+    draw.text((text_x, text_y), credits_text, fill=(36, 41, 47), font=font)  # Draw text with specified font
 
 def create_tetris_gif(username, year, contributions, output_path):
     width = 53  # 53 weeks
@@ -71,12 +71,12 @@ def create_tetris_gif(username, year, contributions, output_path):
     image_width = width * cell_size + legend_width
     image_height = height * cell_size + 40  # Increased to accommodate legend and credits bar
 
-    # GitHub Dark Mode Contributions Colors
+    # GitHub Light Mode Contributions Colors
     # 0: Background/Empty, 1: Low, 2: Med-Low, 3: Med-High, 4: High
-    colors = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353']
+    colors = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39']
     
-    # GitHub Dark Dimmed Background
-    background_color = '#0d1117'
+    # GitHub Light Background
+    background_color = '#ffffff'
 
     frames = []
     grid = [[0] * height for _ in range(width)]
