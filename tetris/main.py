@@ -1,7 +1,7 @@
 import argparse
 import requests
 from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Tuple, Dict, TypedDict
 
 
@@ -158,6 +158,18 @@ if __name__ == "__main__":
         # Keep only the last 371 days (53 weeks * 7 days)
         # This gives us the rolling year window
         rolling_contributions: List[Tuple[str, int]] = all_contributions[-371:]
+        
+        # Shift to align with Sunday
+        # Python weekday: Mon=0, ..., Sat=5, Sun=6
+        # GitHub/Grid: Sun=0, Mon=1, ..., Sat=6
+        if rolling_contributions:
+            first_date = datetime.strptime(rolling_contributions[0][0], '%Y-%m-%d')
+            # How many days from Sunday is the first date?
+            # If Sun (6), shift is 0. If Mon (0), shift is 1.
+            shift = (first_date.weekday() + 1) % 7
+            if shift > 0:
+                padding: List[Tuple[str, int]] = [(None, 0)] * shift
+                rolling_contributions = padding + rolling_contributions
         
         year_range = f"{current_year - 1} - {current_year}"
         
