@@ -19,8 +19,8 @@ def draw_grid(draw, grid, cell_size, colors):
     for week in range(len(grid)):
         for day in range(len(grid[0])):
             color = colors[grid[week][day]]
-            x0, y0 = week * cell_size + 40, day * cell_size + 20
-            x1, y1 = x0 + cell_size - 2, y0 + cell_size - 2 # -2 for gap
+            x0, y0 = week * cell_size + 40 + 1, day * cell_size + 20 + 1
+            x1, y1 = x0 + cell_size - 2, y0 + cell_size - 2 # Center gap (1px + 18px + 1px = 20px)
             # Block
             draw.rounded_rectangle([x0, y0, x1, y1], radius=2, fill=color, outline=(255, 255, 255, 20))
 
@@ -96,8 +96,8 @@ def create_tetris_gif(username, year, contributions, output_path, theme, year_ra
                 draw_grid(draw, grid, cell_size, colors)
 
                 # Draw moving block
-                x0, y0 = week * cell_size + legend_width, step * cell_size + 20
-                x1, y1 = x0 + cell_size - 2, y0 + cell_size - 2 # -2 for gap
+                x0, y0 = week * cell_size + legend_width + 1, step * cell_size + 20 + 1
+                x1, y1 = x0 + cell_size - 2, y0 + cell_size - 2
                 draw.rounded_rectangle(
                     [x0, y0, x1, y1],
                     radius=2,
@@ -116,8 +116,8 @@ def create_tetris_gif(username, year, contributions, output_path, theme, year_ra
             draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors)
             draw_grid(draw, grid, cell_size, colors)
 
-            x0, y0 = week * cell_size + legend_width, day * cell_size + 20
-            x1, y1 = x0 + cell_size - 2, y0 + cell_size - 2 # -2 for gap
+            x0, y0 = week * cell_size + legend_width + 1, day * cell_size + 20 + 1
+            x1, y1 = x0 + cell_size - 2, y0 + cell_size - 2
             draw.rounded_rectangle(
                 [x0, y0, x1, y1],
                 radius=2,
