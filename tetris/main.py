@@ -107,8 +107,9 @@ def create_tetris_gif(username, year, contributions, output_path):
                 # Draw moving block
                 x0, y0 = week * cell_size + legend_width, step * cell_size + 20
                 x1, y1 = x0 + cell_size, y0 + cell_size
-                draw.rectangle(
+                draw.rounded_rectangle(
                     [x0, y0, x1, y1],
+                    radius=2,
                     fill=colors[value],
                     outline=(255, 255, 255, 50)
                 )
