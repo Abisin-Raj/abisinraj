@@ -151,10 +151,14 @@ if __name__ == "__main__":
         contributions_prev = get_github_contributions(args.username, current_year - 1)
         
         # Combine and sort by date just in case
-        all_contributions = contributions_prev + contributions_current
+        all_contributions = sorted(contributions_current + contributions_prev, key=lambda x: x[0])
+        
+        # Keep only the last 371 days (53 weeks * 7 days)
+        # This gives us the rolling year window
+        rolling_contributions = all_contributions[-371:]
         
         # Ensure output directory matches where we run it from or absolute path
-        create_tetris_gif(args.username, current_year, all_contributions, 'tetris_github.gif')
+        create_tetris_gif(args.username, current_year, rolling_contributions, 'tetris_github.gif')
         print("GIF created successfully!")
     except Exception as e:
         print(e)
