@@ -1,5 +1,6 @@
 import argparse
 import requests
+import sys
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timedelta
 from typing import List, Tuple, Dict, TypedDict, Optional, Any
@@ -188,4 +189,5 @@ if __name__ == "__main__":
         create_tetris_gif(args.username, current_year, rolling_contributions, args.output, args.theme, year_range)
         print("GIF created successfully!")
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
+        sys.exit(1)

@@ -28,20 +28,17 @@ jobs:
           pip install -r tetris/requirements.txt
           
       - name: Create dist directory
-        run: mkdir dist
+        run: mkdir -p dist
 
       - name: Generate GIF
         run: |
-          python tetris/main.py --username abisinraj --theme light --output github-contribution-grid-tetris.gif
-          python tetris/main.py --username abisinraj --theme dark --output github-contribution-grid-tetris-dark.gif
+            python tetris/main.py --username abisinraj --theme light --output dist/github-contribution-grid-tetris.gif
+            python tetris/main.py --username abisinraj --theme dark --output dist/github-contribution-grid-tetris-dark.gif
         
-      - name: Push new image to output branch
+      - name: Verify Generated Files
         run: |
-          mkdir -p ../dist
-          mv github-contribution-grid-tetris.gif ../dist/
-          mv github-contribution-grid-tetris-dark.gif ../dist/
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ls -l dist/github-contribution-grid-tetris.gif
+          ls -l dist/github-contribution-grid-tetris-dark.gif
           
       - name: Push to Output Branch
         uses: crazy-max/ghaction-github-pages@v4
