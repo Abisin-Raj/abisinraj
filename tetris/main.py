@@ -17,7 +17,11 @@ def get_github_contributions(username: str, year: int) -> List[Tuple[str, int]]:
     body = response.json()
     return [(contribution['date'], contribution['count']) for contribution in body['contributions']]
 
+_FONT_CACHE = {}
+
 def get_font(size):
+    if size in _FONT_CACHE:
+        return _FONT_CACHE[size]
     # Try more paths for fonts on different Linux distros
     font_paths = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -27,10 +31,13 @@ def get_font(size):
     ]
     for path in font_paths:
         try:
-            return ImageFont.truetype(path, size)
-        except:
+            font = ImageFont.truetype(path, size)
+            _FONT_CACHE[size] = font
+            return font
+        except Exception:
             continue
-    return ImageFont.load_default()
+    _FONT_CACHE[size] = ImageFont.load_default()
+    return _FONT_CACHE[size]
 
 def draw_grid(draw, grid, cell_size, colors):
     for week in range(len(grid)):
@@ -42,30 +49,18 @@ def draw_grid(draw, grid, cell_size, colors):
             # Block
             draw.rounded_rectangle([x0, y0, x1, y1], radius=4, fill=color, outline=(255, 255, 255, 20))
 
-def draw_legend(draw: ImageDraw.Draw, cell_size: int, image_width: int, image_height: int, username: str, year: str, theme_colors: Dict[str, Any], contributions: List[Tuple[Optional[str], int]]):
+def draw_legend(draw: ImageDraw.Draw, cell_size: int, image_width: int, image_height: int, username: str, year: str, theme_colors: Dict[str, Any], month_labels: List[Tuple[int, str]]):
     # Draw day names (Only show Mon, Wed, Fri)
     font = get_font(16)
-    # Draw day names (Only show Mon, Wed, Fri)
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for i, day in enumerate(days):
         if day in ["Mon", "Wed", "Fri"]:
             y = i * cell_size + 40
             draw.text((10, y + 10), day, font=font, fill=theme_colors['text'])
 
-    # Draw month names dynamically based on data
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    last_month = -1
-    
-    # Ensure the first month is always labeled
-    for i, (date_str, count) in enumerate(contributions):
-        if not date_str: continue
-        
-        dt = datetime.strptime(date_str, '%Y-%m-%d')
-        if dt.month != last_month:
-            week = i // 7
-            x = week * cell_size + 80
-            draw.text((x, 10), months[dt.month - 1], font=font, fill=theme_colors['text'])
-            last_month = dt.month
+    # Use pre-calculated month labels
+    for x, month_name in month_labels:
+        draw.text((x, 10), month_name, font=font, fill=theme_colors['text'])
 
     # Removed year text as requested to prevent overlap
 
@@ -106,109 +101,106 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
     # Initialize grid with background color index (0)
     grid: List[List[int]] = [[0] * height for _ in range(width)]
 
+    # Prepare batches by color level
+    batches: List[List[Tuple[int, int, int]]] = [[] for _ in range(5)]
     for i, (date, count) in enumerate(contributions):
         week = i // 7
         day = i % 7
-        
-        if week >= width:
-            break  # Skip extra weeks if any
+        if week >= width: break
         
         # Map count to color index (0-4)
-        if count == 0:
-            value = 0
-        elif count <= 3:
-            value = 1
-        elif count <= 6:
-            value = 2
-        elif count <= 9:
-            value = 3
+        if count == 0: val = 0
+        elif count <= 3: val = 1
+        elif count <= 6: val = 2
+        elif count <= 9: val = 3
+        else: val = 4
+        
+        if date:
+            batches[val].append((week, day, val))
         else:
-            value = 4
+            # Padding elements just fill the grid immediately
+            grid[week][day] = val
 
-        # If it's a padding element (no date), just skip animation and fill grid
-        if not date:
-            grid[week][day] = value
-            continue
+    # Pre-calculate month labels to avoid slow datetime parsing in animation loop
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    month_labels = []
+    last_m = -1
+    for i, (date_str, count) in enumerate(contributions):
+        if not date_str: continue
+        m = datetime.strptime(date_str, '%Y-%m-%d').month
+        if m != last_m:
+            month_labels.append(( (i // 7) * cell_size + 80, month_names[m-1] ))
+            last_m = m
 
-        if value == 0:
-            # SHATTER MECHANIC: Grey blocks break without a message
-            msg = ""
-            msg_font = None
-        else:
-            msg = ""
-            msg_font = None
-
-        for step in range(day + 1):
-            if step % 2 == 0:  # Add frames for every second step only
-                img = Image.new('RGB', (image_width, image_height), background_color)
-                draw = ImageDraw.Draw(img)
-                draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, contributions)
-                draw_grid(draw, grid, cell_size, colors)
-
-                # Double offsets: +2px padding
+    # ... in loops replace draw_legend calls:
+    # draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
+    
+    # Animate each level batch
+    print(f"Generating GIF for {username} - Theme: {theme}")
+    for level in range(5):
+        batch = batches[level]
+        if not batch: continue
+        print(f"  Animating Level {level} batch ({len(batch)} blocks)...")
+        
+        # Determine max falling height in this batch
+        max_day = max(b[1] for b in batch)
+        
+        # Simultaneous falling animation
+        for step in range(max_day + 1):
+            if step % 2 != 0: continue # Adjust speed
+            
+            img = Image.new('RGB', (image_width, image_height), background_color)
+            draw = ImageDraw.Draw(img)
+            draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
+            draw_grid(draw, grid, cell_size, colors)
+            
+            for week, day, val in batch:
+                current_step = min(step, day)
                 x_base = week * cell_size + legend_width
-                y_base = step * cell_size + 40
+                y_base = current_step * cell_size + 40
                 
-                if value != 0:
-                    # Draw falling block for active days
-                    x0, y0 = x_base + 2, y_base + 2
-                    x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
-                    draw.rounded_rectangle(
-                        [x0, y0, x1, y1],
-                        radius=4,
-                        fill=colors[value],
-                        outline=(255, 255, 255, 50)
-                    )
-                # Note: value == 0 (grey blocks) don't fall as blocks anymore, they just shatter at the end
+                # All blocks in the batch fall together
+                x0, y0 = x_base + 2, y_base + 2
+                x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+                draw.rounded_rectangle([x0, y0, x1, y1], radius=4, fill=colors[val], outline=(255, 255, 255, 50))
+            
+            frames.append(img)
 
-                frames.append(img)
-
-        if value == 0:
-            # 4-frame shatter animation (just fragments, no words)
+        # Post-falling logic for the batch
+        if level == 0:
+            # Simultaneous shatter for ALL grey blocks in this batch
             for frame_idx in range(4):
                 img = Image.new('RGB', (image_width, image_height), background_color)
                 draw = ImageDraw.Draw(img)
-                draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, contributions)
+                draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
                 draw_grid(draw, grid, cell_size, colors)
                 
-                # Draw "shattered" fragments
-                x_base = week * cell_size + legend_width
-                y_base = day * cell_size + 40
-                
                 alpha = 255 - (frame_idx * 60)
-                
-                # Scattered fragments
-                for _ in range(5):
-                    frag_x = x_base + random.randint(0, cell_size - 10)
-                    frag_y = y_base + random.randint(0, cell_size - 10)
-                    size = random.randint(4, 8)
-                    draw.rounded_rectangle([frag_x, frag_y, frag_x + size, frag_y + size], radius=2, fill=colors[0], outline=(255, 255, 255, alpha))
-                
+                for week, day, val in batch:
+                    x_base = week * cell_size + legend_width
+                    y_base = day * cell_size + 40
+                    for _ in range(5):
+                        frag_x = x_base + random.randint(0, cell_size - 10)
+                        frag_y = y_base + random.randint(0, cell_size - 10)
+                        size = random.randint(4, 8)
+                        draw.rounded_rectangle([frag_x, frag_y, frag_x + size, frag_y + size], radius=2, fill=colors[0], outline=(255, 255, 255, alpha))
                 frames.append(img)
-            
-            # VERY IMPORTANT: Do NOT update the grid. Grey blocks "break" and are gone.
-            continue
-            
-        grid[week][day] = value
-
-        # Fade effect for the block when it stops (ONLY for active green blocks)
-        for alpha in range(0, 256, 50):  # Larger steps to make the fade faster
-            img = Image.new('RGB', (image_width, image_height), background_color)
-            draw = ImageDraw.Draw(img)
-            draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, contributions)
-            draw_grid(draw, grid, cell_size, colors)
-
-            # 2px padding sync
-            x0, y0 = week * cell_size + legend_width + 2, day * cell_size + 40 + 2
-            x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
-            draw.rounded_rectangle(
-                [x0, y0, x1, y1],
-                radius=4,
-                fill=colors[value],
-                outline=(255, 255, 255, alpha)
-            )
-
-            frames.append(img)
+        else:
+            for week, day, val in batch:
+                grid[week][day] = val
+                
+            # Batch fade animation
+            for alpha in range(0, 256, 128):
+                img = Image.new('RGB', (image_width, image_height), background_color)
+                draw = ImageDraw.Draw(img)
+                draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
+                draw_grid(draw, grid, cell_size, colors)
+                
+                for week, day, val in batch:
+                    x0, y0 = week * cell_size + legend_width + 2, day * cell_size + 40 + 2
+                    x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+                    draw.rounded_rectangle([x0, y0, x1, y1], radius=4, fill=colors[val], outline=(255, 255, 255, alpha))
+                frames.append(img)
 
     # Save as animated GIF
     if len(frames) == 0:
