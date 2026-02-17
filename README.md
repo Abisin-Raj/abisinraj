@@ -19,9 +19,12 @@
     text-align:left;
 ">
 
-<h1 style="color:white; font-weight:500; letter-spacing:0.3px;">
-Student Researcher · Independent Security Learner
+<h1 style="color:white; font-weight:700; font-size:42px; letter-spacing:1px; margin-bottom:0;">
+ABISIN RAJ
 </h1>
+<p style="color:#d6bb6a; font-size:18px; margin-top:5px; font-weight:500;">
+Security Researcher & Python Developer
+</p>
 
 <p style="font-size:15px; color:#d6bb6a; max-width:760px; line-height:1.7;">
 I study cybersecurity through self learning, structured practice, and experiments on my own systems.  

@@ -32,8 +32,8 @@ jobs:
 
       - name: Generate GIF
         run: |
-            python tetris/main.py --username abisinraj --theme light --output dist/github-contribution-grid-tetris.gif || { echo "Failed to generate light theme GIF"; exit 1; }
-            python tetris/main.py --username abisinraj --theme dark --output dist/github-contribution-grid-tetris-dark.gif || { echo "Failed to generate dark theme GIF"; exit 1; }
+            python3 tetris/main.py --username abisinraj --theme light --output dist/github-contribution-grid-tetris.gif || { echo "Failed to generate light theme GIF"; exit 1; }
+            python3 tetris/main.py --username abisinraj --theme dark --output dist/github-contribution-grid-tetris-dark.gif || { echo "Failed to generate dark theme GIF"; exit 1; }
         
       - name: Verify Generated Files
         run: |
@@ -43,13 +43,16 @@ jobs:
       - name: Update README with Cache Buster
         run: |
           TIMESTAMP=$(date +%s)
-          sed -i "s/\.gif?v=[0-9]*/.gif?v=$TIMESTAMP/g" README.md
+          # Fix regex to correctly escape the question mark
+          sed -i "s/\.gif\?v=[0-9]*/.gif?v=$TIMESTAMP/g" README.md
           
       - name: Commit and Push README Changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add README.md
+          # Pull latest changes to avoid push conflicts
+          git pull --rebase origin main
           git commit -m "chore: bust tetris gif cache [skip ci]" || echo "No changes to README"
           git push origin main
           
