@@ -14,37 +14,50 @@ def get_github_contributions(username: str, year: int) -> List[Tuple[str, int]]:
         raise Exception(f"Failed to fetch data from GitHub: {response.status_code}")
 
     body = response.json()
-
     return [(contribution['date'], contribution['count']) for contribution in body['contributions']]
+
+def get_font(size):
+    try:
+        # Try to find a standard font on Linux
+        return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size)
+    except:
+        try:
+             return ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", size)
+        except:
+            return ImageFont.load_default()
 
 def draw_grid(draw, grid, cell_size, colors):
     for week in range(len(grid)):
         for day in range(len(grid[0])):
             color = colors[grid[week][day]]
-            x0, y0 = week * cell_size + 40 + 2, day * cell_size + 20 + 2
-            x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+            # Upscaled offsets: padding 4px (2 * double)
+            x0, y0 = week * cell_size + 80 + 4, day * cell_size + 40 + 4
+            x1, y1 = x0 + cell_size - 8, y0 + cell_size - 8
             # Block
-            draw.rounded_rectangle([x0, y0, x1, y1], radius=3, fill=color, outline=(255, 255, 255, 20))
+            draw.rounded_rectangle([x0, y0, x1, y1], radius=6, fill=color, outline=(255, 255, 255, 20))
 
 def draw_legend(draw: ImageDraw.Draw, cell_size: int, image_width: int, image_height: int, username: str, year: str, theme_colors: Dict[str, Any], contributions: List[Tuple[Optional[str], int]]):
+    # Draw day names (Only show Mon, Wed, Fri)
+    font = get_font(16)
     # Draw day names (Only show Mon, Wed, Fri)
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for i, day in enumerate(days):
         if day in ["Mon", "Wed", "Fri"]:
-            y = i * cell_size + 20
-            draw.text((5, y), day, fill=theme_colors['text'])
+            y = i * cell_size + 40
+            draw.text((10, y + 10), day, font=font, fill=theme_colors['text'])
 
     # Draw month names dynamically based on data
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     last_month = -1
     for i, (date_str, count) in enumerate(contributions):
-        if not date_str or i % 7 != 0: continue
+        # Check every day for month transitions, but only draw label at the start of a week
+        if not date_str: continue
         
         dt = datetime.strptime(date_str, '%Y-%m-%d')
         if dt.month != last_month:
             week = i // 7
-            x = week * cell_size + 40
-            draw.text((x, 5), months[dt.month - 1], fill=theme_colors['text'])
+            x = week * cell_size + 80
+            draw.text((x, 10), months[dt.month - 1], font=font, fill=theme_colors['text'])
             last_month = dt.month
 
     # Removed year text as requested to prevent overlap
@@ -54,10 +67,10 @@ def draw_legend(draw: ImageDraw.Draw, cell_size: int, image_width: int, image_he
 def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Optional[str], int]], output_path: str, theme: str, year_range: str):
     width = 53  # 53 weeks
     height = 7  # 7 days per week
-    cell_size = 20
-    legend_width = 40
+    cell_size = 40
+    legend_width = 80
     image_width = width * cell_size + legend_width
-    image_height = height * cell_size + 20  # Reduced height since credits are removed
+    image_height = height * cell_size + 40  # Reduced height since credits are removed
 
     # Theme Configuration
     class Theme(TypedDict):
@@ -118,11 +131,12 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
                 draw_grid(draw, grid, cell_size, colors)
 
                 # Draw moving block
-                x0, y0 = week * cell_size + legend_width + 2, step * cell_size + 20 + 2
-                x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+                # Double offsets: +4px padding
+                x0, y0 = week * cell_size + legend_width + 4, step * cell_size + 40 + 4
+                x1, y1 = x0 + cell_size - 8, y0 + cell_size - 8
                 draw.rounded_rectangle(
                     [x0, y0, x1, y1],
-                    radius=3,
+                    radius=6,
                     fill=colors[value],
                     outline=(255, 255, 255, 50)
                 )
@@ -138,11 +152,12 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
             draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, contributions)
             draw_grid(draw, grid, cell_size, colors)
 
-            x0, y0 = week * cell_size + legend_width + 2, day * cell_size + 20 + 2
-            x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+            # Double offsets: +4px padding
+            x0, y0 = week * cell_size + legend_width + 4, day * cell_size + 40 + 4
+            x1, y1 = x0 + cell_size - 8, y0 + cell_size - 8
             draw.rounded_rectangle(
                 [x0, y0, x1, y1],
-                radius=3,
+                radius=6,
                 fill=colors[value],
                 outline=(255, 255, 255, alpha)
             )
