@@ -26,11 +26,12 @@ def draw_grid(draw, grid, cell_size, colors):
             draw.rounded_rectangle([x0, y0, x1, y1], radius=2, fill=color, outline=(255, 255, 255, 20))
 
 def draw_legend(draw, cell_size, image_width, image_height, username, year, theme_colors):
-    # Draw day names
+    # Draw day names (Only show Mon, Wed, Fri)
     days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for i, day in enumerate(days):
-        y = i * cell_size + 20
-        draw.text((5, y), day, fill=theme_colors['text'])
+        if day in ["Mon", "Wed", "Fri"]:
+            y = i * cell_size + 20
+            draw.text((5, y), day, fill=theme_colors['text'])
 
     # Draw month names
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
