@@ -1,6 +1,7 @@
 import argparse
 import requests
 import sys
+import random
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timedelta
 from typing import List, Tuple, Dict, TypedDict, Optional, Any
@@ -17,14 +18,19 @@ def get_github_contributions(username: str, year: int) -> List[Tuple[str, int]]:
     return [(contribution['date'], contribution['count']) for contribution in body['contributions']]
 
 def get_font(size):
-    try:
-        # Try to find a standard font on Linux
-        return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size)
-    except:
+    # Try more paths for fonts on different Linux distros
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"
+    ]
+    for path in font_paths:
         try:
-             return ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", size)
+            return ImageFont.truetype(path, size)
         except:
-            return ImageFont.load_default()
+            continue
+    return ImageFont.load_default()
 
 def draw_grid(draw, grid, cell_size, colors):
     for week in range(len(grid)):
@@ -143,9 +149,42 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
 
                 frames.append(img)
 
+        if value == 0:
+            # SHATTER MECHANIC: Grey blocks break and show a message
+            messages = ["REST", "IDLE", "RECHARGE", "ZEN", "PAUSE", "OFF"]
+            msg = random.choice(messages)
+            msg_font = get_font(24)
+            
+            # 4-frame shatter animation
+            for frame_idx in range(4):
+                img = Image.new('RGB', (image_width, image_height), background_color)
+                draw = ImageDraw.Draw(img)
+                draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, contributions)
+                draw_grid(draw, grid, cell_size, colors)
+                
+                # Draw "shattered" fragments
+                x_base = week * cell_size + legend_width
+                y_base = day * cell_size + 40
+                
+                # Draw the breaking message (fade out)
+                alpha = 255 - (frame_idx * 60)
+                draw.text((x_base + 10, y_base - 20), msg, font=msg_font, fill=(theme_colors['text'][0], theme_colors['text'][1], theme_colors['text'][2], alpha))
+                
+                # Scattered fragments
+                for _ in range(5):
+                    frag_x = x_base + random.randint(0, cell_size - 10)
+                    frag_y = y_base + random.randint(0, cell_size - 10)
+                    size = random.randint(4, 8)
+                    draw.rounded_rectangle([frag_x, frag_y, frag_x + size, frag_y + size], radius=2, fill=colors[0], outline=(255, 255, 255, alpha))
+                
+                frames.append(img)
+            
+            # VERY IMPORTANT: Do NOT update the grid. Grey blocks "break" and are gone.
+            continue
+            
         grid[week][day] = value
 
-        # Fade effect for the block when it stops
+        # Fade effect for the block when it stops (ONLY for active green blocks)
         for alpha in range(0, 256, 50):  # Larger steps to make the fade faster
             img = Image.new('RGB', (image_width, image_height), background_color)
             draw = ImageDraw.Draw(img)
@@ -184,20 +223,30 @@ if __name__ == "__main__":
         contributions_current: List[Tuple[str, int]] = get_github_contributions(args.username, current_year)
         contributions_prev: List[Tuple[str, int]] = get_github_contributions(args.username, current_year - 1)
         
-        # Combine and sort by date just in case
+        # Combine and sort by date
         all_contributions: List[Tuple[Optional[str], int]] = sorted(contributions_current + contributions_prev, key=lambda x: x[0] if x[0] else "")
         
         if len(all_contributions) == 0:
             raise Exception(f"No contributions found for user {args.username}")
 
-        # Take up to 371 days (may be less for new accounts)
-        rolling_contributions: List[Tuple[Optional[str], int]] = all_contributions[-371:] if len(all_contributions) >= 371 else all_contributions
+        # Get today's date and find exactly 52 weeks ago
+        # GitHubcontribution data is usually up to yesterday/today.
+        # We want a 53-week window (52 weeks + current partial week)
+        today = datetime.now()
+        start_date_limit = (today - timedelta(days=370)).strftime('%Y-%m-%d')
+        
+        # Filter for data from roughly one year ago
+        rolling_contributions = [c for c in all_contributions if c[0] and c[0] >= start_date_limit]
+        
+        # If we have less than 371 days after filtering, just take the last 371
+        if len(rolling_contributions) < 371:
+            rolling_contributions = all_contributions[-371:]
 
         # Shift to align with Sunday
         if rolling_contributions and rolling_contributions[0][0]:
             first_date = datetime.strptime(rolling_contributions[0][0], '%Y-%m-%d')
-            # How many days from Sunday is the first date?
-            # If Sun (6), shift is 0. If Mon (0), shift is 1.
+            # Python weekday: Mon=0, ..., Sun=6. GitHub start: Sun=0.
+            # Convert Mon=0->1, ..., Sun=6->0
             shift = (first_date.weekday() + 1) % 7
             if shift > 0:
                 padding: List[Tuple[Optional[str], int]] = [(None, 0)] * shift
