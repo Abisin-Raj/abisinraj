@@ -36,7 +36,10 @@ jobs:
       - name: Generate GIF
         run: |
           cd tetris-tool
-          python main.py --username ${{ github.repository_owner }} --output ../dist/github-contribution-grid-tetris.gif
+          ls -la
+          python main.py --username ${{ github.repository_owner }}
+          ls -la images/
+          mv images/tetris_github.gif ../dist/github-contribution-grid-tetris.gif
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
