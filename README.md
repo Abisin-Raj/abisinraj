@@ -201,9 +201,9 @@ Contact
 <img src="https://img.shields.io/badge/LinkedIn-d6bb6a?style=flat&logo=linkedin&logoColor=000000" />
 </a>
 
-<a href="mailto:abisinraj04@gmail.com" style="margin-left:10px;">
+<!-- <a href="mailto:abisinraj04@gmail.com" style="margin-left:10px;">
 <img src="https://img.shields.io/badge/Email-d6bb6a?style=flat&logo=gmail&logoColor=000000" />
-</a>
+</a> -->
 
 </div>
 
@@ -228,7 +228,10 @@ Contact
     margin:auto;
     text-align:left;
 ">
-  <img style="width:100%; border-radius:8px;" src="https://raw.githubusercontent.com/abisinraj/abisinraj/output-tetris/github-contribution-grid-tetris.gif" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/abisinraj/abisinraj/output-tetris/github-contribution-grid-tetris-dark.gif">
+    <img style="width:100%; border-radius:8px;" src="https://raw.githubusercontent.com/abisinraj/abisinraj/output-tetris/github-contribution-grid-tetris.gif" />
+  </picture>
 </div>
 
 </div>
