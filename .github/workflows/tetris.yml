@@ -32,8 +32,8 @@ jobs:
 
       - name: Generate GIF
         run: |
-            python tetris/main.py --username abisinraj --theme light --output dist/github-contribution-grid-tetris.gif
-            python tetris/main.py --username abisinraj --theme dark --output dist/github-contribution-grid-tetris-dark.gif
+            python tetris/main.py --username abisinraj --theme light --output dist/github-contribution-grid-tetris.gif || { echo "Failed to generate light theme GIF"; exit 1; }
+            python tetris/main.py --username abisinraj --theme dark --output dist/github-contribution-grid-tetris-dark.gif || { echo "Failed to generate dark theme GIF"; exit 1; }
         
       - name: Verify Generated Files
         run: |
