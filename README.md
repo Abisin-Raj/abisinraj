@@ -24,7 +24,7 @@ ABISIN RAJ
 </h1>
 
 <div style="margin-top: 20px; text-align: center;">
-  <img src="assets/seasons_walking.gif" alt="Seasons Walking" style="width: 100%; max-width: 900px; border-radius: 8px; image-rendering: pixelated;" />
+  <img src="assets/seasons_walking.gif" alt="Seasons Walking" style="width: 100%; border-radius: 8px; image-rendering: pixelated;" />
 </div>
 
 </div>
