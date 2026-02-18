@@ -61,7 +61,7 @@ def draw_scene(season, frame, W=1200, H=128):
         mx += int(bw * 0.65)
 
     # ── 3. Trees (parallax ×0.5) ──────────────────────────────────────────────
-    t_scroll = frame * 4
+    t_scroll = frame * (spd // 2 if season == "spring" else 4)
     random.seed(99)
     n_trees = W // 10
     for _ in range(n_trees):
