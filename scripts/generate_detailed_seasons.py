@@ -34,7 +34,9 @@ def draw_scene(season, frame, W=1200, H=128):
     ROAD_B  = int(H * 0.50)   # 64
     SLOPE_B = int(H * 0.75)   # 96
 
-    spd = 8
+    spd = 6
+    if season == "spring":
+        spd = 3  # Serene pace for sakura
     shift = frame * spd
 
     # ── 1. Sky ────────────────────────────────────────────────────────────────
@@ -86,19 +88,28 @@ def draw_scene(season, frame, W=1200, H=128):
 
     # ── 4. Season-specific atmosphere ─────────────────────────────────────────
 
-    # SPRING – wind lines + pink pollen
+    # SPRING – Very slow wind lines + pink petals
     if season == "spring":
-        wshift = frame * 18
+        # Slow down wind lines speed further
+        p_shift = frame * 3
         random.seed(333)
-        for _ in range(W // 22):
-            wx0 = random.randint(-120, W)
-            wy  = random.randint(5, SLOPE_B - 5)
-            wx  = (wx0 + wshift) % (W + 120) - 60
-            d.line([wx, wy, wx + 35, wy + 2], fill=(255, 255, 255, 110), width=1)
-        random.seed(frame * 3 + 1)
-        for _ in range(W // 7):
-            dx, dy = random.randint(0, W), random.randint(0, H)
-            d.point((dx, dy), fill=(255, 182, 193, 160))
+        for _ in range(W // 25):
+            ox0 = random.randint(-120, W)
+            oy  = random.randint(5, SLOPE_B - 20)
+            wx  = (ox0 + p_shift * 1.5) % (W + 120) - 60
+            d.line([wx, oy, wx + 40, oy], fill=(255, 255, 255, 70), width=1)
+        
+        # Consistent drifting petals across the whole screen
+        random.seed(9999)
+        for _ in range(W // 6):
+            ox0 = random.randint(-200, W + 200)
+            oy0 = random.randint(-50, H + 50)
+            # Drift very slowly: 2 pixels per frame
+            px = (ox0 - frame * 2) % W
+            py = (oy0 + frame * 1 + math.sin(frame * 0.4 + ox0) * 5) % H
+            # Varied pink shades
+            p_col = random.choice([(255, 182, 193, 180), (255, 105, 180, 160), (255, 192, 203, 140)])
+            d.rectangle([px, py, px+2, py+2], fill=p_col)
 
     # SUMMER – heat shimmer dots + golden pollen
     elif season == "summer":
@@ -317,6 +328,6 @@ if __name__ == "__main__":
     out = "/home/abisin/Desktop/abisinraj/assets/seasons_walking.gif"
     frames[0].save(
         out, save_all=True, append_images=frames[1:],
-        optimize=False, duration=120, loop=0
+        optimize=False, duration=150, loop=0
     )
     print(f"Banner GIF saved → {out}")
