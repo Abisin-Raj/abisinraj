@@ -69,15 +69,20 @@ def draw_legend(draw: ImageDraw.Draw, cell_size: int, image_width: int, image_he
 
 
 def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Optional[str], int]], output_path: str, theme: str, year_range: str):
-    total_weeks = 53       # full year of data
-    visible_weeks = 26     # how many weeks visible at once (sliding window)
-    height = 7             # days per week
+    width = 53  # 53 weeks
+    height = 7  # 7 days per week
     cell_size = 40
     legend_width = 80
-    image_width = visible_weeks * cell_size + legend_width
-    image_height = height * cell_size + 40
+    image_width = width * cell_size + legend_width
+    image_height = height * cell_size + 40  # Reduced height since credits are removed
 
-    THEMES = {
+    # Theme Configuration
+    class Theme(TypedDict):
+        background: str
+        text: Tuple[int, int, int]
+        colors: List[str]
+
+    THEMES: Dict[str, Theme] = {
         'light': {
             'background': '#ffffff',
             'text': (36, 41, 47),
@@ -85,95 +90,116 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
         },
         'dark': {
             'background': '#0d1117',
-            'text': (201, 209, 217),
+            'text': (201, 209, 217), # GitHub Dark Text
             'colors': ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353']
         }
     }
-
+    
     theme_colors = THEMES.get(theme, THEMES['light'])
     colors = theme_colors['colors']
     background_color = theme_colors['background']
-    border_color = (150, 150, 150, 25)
 
-    # Build full grid: total_weeks x height
-    full_grid: List[List[int]] = [[0] * height for _ in range(total_weeks)]
+    frames: List[Image.Image] = []
+    # Initialize grid with background color index (0)
+    grid: List[List[int]] = [[0] * height for _ in range(width)]
+
+    # Prepare batches by color level
+    batches: List[List[Tuple[int, int, int]]] = [[] for _ in range(5)]
     for i, (date, count) in enumerate(contributions):
         week = i // 7
         day = i % 7
-        if week >= total_weeks: break
+        if week >= width: break
+        
+        # Map count to color index (0-4)
         if count == 0: val = 0
         elif count <= 3: val = 1
         elif count <= 6: val = 2
         elif count <= 9: val = 3
         else: val = 4
-        full_grid[week][day] = val
+        
+        if date:
+            batches[val].append((week, day, val))
+        else:
+            # Padding elements just fill the grid immediately
+            grid[week][day] = val
 
-    # Build month labels for each week index (relative to full_grid)
-    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    # week_month[w] = month name if a new month starts at week w, else None
-    week_month: List[Optional[str]] = [None for _ in range(total_weeks)]
+    # Pre-calculate month labels to avoid slow datetime parsing in animation loop
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    month_labels = []
     last_m = -1
+    last_x = -999  # track last label x position to prevent overlap
+    LABEL_WIDTH = 30  # approx pixel width of a 3-char label at font size 16
     for i, (date_str, count) in enumerate(contributions):
         if not date_str: continue
-        w = i // 7
-        if w >= total_weeks: break
         m = datetime.strptime(date_str, '%Y-%m-%d').month
         if m != last_m:
-            week_month[w] = month_names[m - 1]
+            x = (i // 7) * cell_size + 80
+            # If too close to previous label, nudge right just enough to clear it
+            if x < last_x + LABEL_WIDTH + 4:
+                x = last_x + LABEL_WIDTH + 4
+            month_labels.append((x, month_names[m-1]))
+            last_x = x
             last_m = m
 
-    def draw_frame(start_week: int) -> Image.Image:
-        img = Image.new('RGB', (image_width, image_height), background_color)
-        draw = ImageDraw.Draw(img)
-        font = get_font(16)
+    # ... in loops replace draw_legend calls:
+    # draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
+    
+    # Animate each level batch
+    print(f"Generating GIF for {username} - Theme: {theme}")
 
-        # Draw day labels
-        days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        for i, day in enumerate(days):
-            if day in ["Mon", "Wed", "Fri"]:
-                y = i * cell_size + 40
-                draw.text((10, y + 10), day, font=font, fill=theme_colors['text'])
+    # Place level-0 (empty/grey) cells directly — no falling animation
+    for week, day, val in batches[0]:
+        grid[week][day] = val
 
-        # Draw month labels for visible weeks, with overlap prevention
-        last_label_x = -999
-        LABEL_WIDTH = 30
-        for col, w in enumerate(range(start_week, start_week + visible_weeks)):
-            if w < total_weeks and week_month[w]:
-                x = col * cell_size + legend_width
-                if x >= last_label_x + LABEL_WIDTH + 4:
-                    draw.text((x, 10), week_month[w], font=font, fill=theme_colors['text'])
-                    last_label_x = x
+    for level in range(1, 5):
+        batch = batches[level]
+        if not batch: continue
+        print(f"  Animating Level {level} batch ({len(batch)} blocks)...")
+        
+        # Determine max falling height in this batch
+        max_day = max(b[1] for b in batch)
+        
+        # Simultaneous falling animation
+        for step in range(max_day + 1):
+            if step % 2 != 0: continue # Adjust speed
+            
+            img = Image.new('RGB', (image_width, image_height), background_color)
+            draw = ImageDraw.Draw(img)
+            draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
+            draw_grid(draw, grid, cell_size, colors, theme_colors)
+            
+            for week, day, val in batch:
+                current_step = min(step, day)
+                x_base = week * cell_size + legend_width
+                y_base = current_step * cell_size + 40
+                
+                x0, y0 = x_base + 2, y_base + 2
+                x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+                draw.rounded_rectangle([x0, y0, x1, y1], radius=8, fill=colors[val], outline=(255, 255, 255, 50))
+            
+            frames.append(img)
 
-        # Draw cells for visible window
-        for col, w in enumerate(range(start_week, start_week + visible_weeks)):
-            for day in range(height):
-                val = full_grid[w][day] if w < total_weeks else 0
-                color = colors[val]
-                x0 = col * cell_size + legend_width + 2
-                y0 = day * cell_size + 40 + 2
-                x1 = x0 + cell_size - 4
-                y1 = y0 + cell_size - 4
-                draw.rounded_rectangle([x0, y0, x1, y1], radius=8,
-                                       fill=color, outline=border_color, width=1)
-        return img
+        # Place blocks into grid then do a brief fade-in
+        for week, day, val in batch:
+            grid[week][day] = val
+            
+        for alpha in range(0, 256, 128):
+            img = Image.new('RGB', (image_width, image_height), background_color)
+            draw = ImageDraw.Draw(img)
+            draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
+            draw_grid(draw, grid, cell_size, colors, theme_colors)
+            
+            for week, day, val in batch:
+                x0, y0 = week * cell_size + legend_width + 2, day * cell_size + 40 + 2
+                x1, y1 = x0 + cell_size - 4, y0 + cell_size - 4
+                draw.rounded_rectangle([x0, y0, x1, y1], radius=8, fill=colors[val], outline=(255, 255, 255, alpha))
+            frames.append(img)
 
-    frames: List[Image.Image] = []
-    print(f"Generating scrolling GIF for {username} - Theme: {theme}")
 
-    # Scroll from week 0 to the last possible start position
-    # so the final frame shows the most recent visible_weeks
-    max_start = total_weeks - visible_weeks
-    for start in range(max_start + 1):
-        frames.append(draw_frame(start))
-
+    # Save as animated GIF
     if len(frames) == 0:
         raise Exception("No frames generated. Check contribution data.")
-
-    # duration per frame in ms — slower = easier to read
-    frames[0].save(output_path, save_all=True, append_images=frames[1:],
-                   optimize=False, duration=120, loop=0)
-
+    frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=20, loop=0)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate a GitHub contributions Tetris GIF.')
