@@ -125,11 +125,16 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
     month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     month_labels = []
     last_m = -1
+    last_x = -999  # track last label x position to prevent overlap
+    MIN_LABEL_GAP = cell_size * 3  # at least 3 weeks (120px) between labels
     for i, (date_str, count) in enumerate(contributions):
         if not date_str: continue
         m = datetime.strptime(date_str, '%Y-%m-%d').month
         if m != last_m:
-            month_labels.append(( (i // 7) * cell_size + 80, month_names[m-1] ))
+            x = (i // 7) * cell_size + 80
+            if x - last_x >= MIN_LABEL_GAP:  # only draw if enough space
+                month_labels.append((x, month_names[m-1]))
+                last_x = x
             last_m = m
 
     # ... in loops replace draw_legend calls:
