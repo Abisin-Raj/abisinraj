@@ -15,7 +15,7 @@
     background: rgba(255,255,255,0.08);
     border-radius:18px;
     border:1px solid rgba(255,255,255,0.15);
-    backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);            
     margin:auto;
     text-align:center;
 ">
