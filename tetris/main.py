@@ -71,7 +71,7 @@ def draw_legend(draw: ImageDraw.Draw, cell_size: int, image_width: int, image_he
 def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Optional[str], int]], output_path: str, theme: str, year_range: str):
     width = 53  # 53 weeks
     height = 7  # 7 days per week
-    cell_size = 25
+    cell_size = 40
     legend_width = 80
     image_width = width * cell_size + legend_width
     image_height = height * cell_size + 40  # Reduced height since credits are removed
