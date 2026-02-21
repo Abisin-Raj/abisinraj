@@ -303,6 +303,11 @@ if __name__ == "__main__":
             d += timedelta(days=1)
         
         print(f"Total days in window: {len(rolling_contributions)}")
+        with open("debug_contributions.log", "w") as f:
+            f.write(f"Date range: {start_date} to {end_date}\n")
+            for ds, c in rolling_contributions[-10:]:
+                f.write(f"{ds}: {c}\n")
+        
         if rolling_contributions and rolling_contributions[0][0]:
             print(f"First date: {rolling_contributions[0][0]}")
         if rolling_contributions and rolling_contributions[-1][0]:
