@@ -61,6 +61,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git config pull.rebase true
           # Pull latest changes with autostash to avoid conflicts with modified README
           # We pull BEFORE adding to the index (git add) to allow autostash to work
           git pull --rebase --autostash origin main
