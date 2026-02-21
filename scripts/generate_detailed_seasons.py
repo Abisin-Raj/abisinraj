@@ -89,8 +89,6 @@ def draw_scene(season, frame, W=1200, H=320):
     if hour >= 20 or hour < 6:
         # Moon
         d.ellipse([W-55, 10, W-15, 50], fill=(220, 230, 255, 200))
-        # Crescent effect
-        d.ellipse([W-45, 10, W-5, 50], fill=final_sky + (255,))
     elif 6 <= hour < 8 or 17 <= hour < 20:
         # Low Sun (Orange/Red)
         sun_y = 10 if hour < 8 else 30
