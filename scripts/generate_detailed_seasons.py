@@ -663,18 +663,28 @@ def draw_scene(season, frame, W=1200, H=320):
             cap_y = ROAD_T + 15
             
             if -100 < cap_x < W + 100:
-                # Legs running (sprint pace)
+                # Legs running (energetic sprint pace)
                 run_t = (frame % 4) / 4.0
-                r_leg_x = 20 * math.sin(run_t * 2 * math.pi)
-                l_leg_x = 20 * math.sin((run_t + 0.5) * 2 * math.pi)
+                stride = 55 * math.sin(run_t * 2 * math.pi)
                 
-                # Blue Jeans
-                d.line([cap_x, cap_y-8, cap_x + int(r_leg_x), cap_y+12], fill=(50, 70, 140, 255), width=7)
-                d.line([cap_x, cap_y-8, cap_x + int(l_leg_x), cap_y+12], fill=(50, 70, 140, 255), width=7)
-                
-                # Running Shoes
-                d.rectangle([cap_x + int(r_leg_x) - 4, cap_y+5, cap_x + int(r_leg_x) + 4, cap_y+12], fill=(40, 40, 40, 255))
-                d.rectangle([cap_x + int(l_leg_x) - 4, cap_y+5, cap_x + int(l_leg_x) + 4, cap_y+12], fill=(40, 40, 40, 255))
+                def cap_leg(x, y, angle, col):
+                    rad = math.radians(angle)
+                    # Higher knee lift for sprinting
+                    kx = x + 10 * math.sin(rad)
+                    ky = y + 10 * math.cos(rad)
+                    d.line([x, y, kx, ky], fill=col, width=8) # Thigh
+                    # More aggressive bend
+                    bend = -45 if angle > 0 else 15
+                    rad2 = math.radians(angle + bend)
+                    fx = kx + 10 * math.sin(rad2)
+                    fy = ky + 10 * math.cos(rad2)
+                    d.line([kx, ky, fx, fy], fill=col, width=6) # Calf
+                    # Shoe
+                    d.rectangle([fx-4, fy, fx+4, fy+6], fill=(40, 40, 40, 255))
+
+                # Blue Jeans (passing behind/on left)
+                cap_leg(cap_x, cap_y - 8, stride, (50, 70, 140, 255))
+                cap_leg(cap_x, cap_y - 8, -stride, (50, 70, 140, 255))
 
                 # Body (Bland Grey T-Shirt)
                 d.rectangle([cap_x-9, cap_y-25, cap_x+7, cap_y-8], fill=(180, 180, 180, 255))
