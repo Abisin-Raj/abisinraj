@@ -373,7 +373,8 @@ def draw_scene(season, frame, W=1200, H=320):
                 d.line([x-1, y-23, x+2, y-24], fill=(0,0,0,255), width=1) # right eye
             
             # Mouth (open yell)
-            d.rectangle([x+dr*1, y-19, x+dr*3, y-17], fill=(50, 0, 0, 255))
+            mx0, mx1 = sorted([x+dr*1, x+dr*3])
+            d.rectangle([mx0, y-19, mx1, y-17], fill=(50, 0, 0, 255))
 
             if pose == 0:
                 # Forward arm (punching forward — thick)
