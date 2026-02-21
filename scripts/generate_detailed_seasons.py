@@ -291,74 +291,96 @@ def draw_scene(season, frame, W=1200, H=320):
             suit = (255, 120, 0, 255) if is_char1 else (0, 80, 200, 255)
             skin = (255, 210, 170, 255)
             h_col = hair_colors[char_stage]
+            # Use only RGB for aura (avoid 5-tuple)
+            aura_rgb = h_col[:3]
 
-            # Aura intensity grows with stage
-            aura_count = 8 + char_stage * 6
-            aura_range = 18 + char_stage * 8
-            random.seed(f * 7 + int(x))
+            # Save random state so aura doesn't corrupt other drawing
+            rng_state = random.getstate()
+
+            # Aura — unique seed per warrior per frame
+            warrior_id = 1000 if is_char1 else 2000
+            random.seed(f * 13 + warrior_id)
+            aura_count = 10 + char_stage * 8
+            aura_range = 20 + char_stage * 10
             for _ in range(aura_count):
                 ax = x + random.randint(-aura_range, aura_range)
-                ay = y + random.randint(-aura_range - 20, aura_range)
-                d.rectangle([ax-2, ay-2, ax+1, ay+1], fill=h_col[:3] + (100,))
+                ay = y + random.randint(-aura_range - 25, aura_range)
+                d.rectangle([ax-2, ay-2, ax+1, ay+1], fill=aura_rgb + (90 + char_stage * 15,))
 
-            # Legs (standing straight, slight apart)
-            d.line([x-4, y, x-6, y+16], fill=suit, width=5)
-            d.rectangle([x-9, y+15, x-3, y+19], fill=(20, 20, 20, 255))
-            d.line([x+4, y, x+6, y+16], fill=suit, width=5)
-            d.rectangle([x+3, y+15, x+9, y+19], fill=(20, 20, 20, 255))
+            # Ground glow under warrior (scales with stage)
+            glow_w = 12 + char_stage * 6
+            glow_a = 40 + char_stage * 20
+            d.ellipse([x - glow_w, y + 18, x + glow_w, y + 24],
+                      fill=aura_rgb + (min(180, glow_a),))
+
+            # Restore random state
+            random.setstate(rng_state)
+
+            # --- Body (slightly larger scale) ---
+            # Legs (standing, slightly apart)
+            d.line([x-5, y+2, x-8, y+20], fill=suit, width=6)
+            d.rectangle([x-11, y+19, x-5, y+24], fill=(30, 30, 30, 255))  # Boot
+            d.line([x+5, y+2, x+8, y+20], fill=suit, width=6)
+            d.rectangle([x+5, y+19, x+11, y+24], fill=(30, 30, 30, 255))  # Boot
 
             # Torso
-            d.rectangle([x-7, y-14, x+7, y], fill=suit)
+            d.rectangle([x-8, y-16, x+8, y+2], fill=suit)
+
             # Head
-            d.ellipse([x-5, y-24, x+5, y-14], fill=skin)
+            d.ellipse([x-6, y-28, x+6, y-16], fill=skin)
 
-            # Arms (down at sides, fists clenched — charge-up pose)
-            d.line([x-7, y-12, x-10, y+2], fill=suit, width=4)
-            d.ellipse([x-12, y+1, x-7, y+6], fill=skin)
-            d.line([x+7, y-12, x+10, y+2], fill=suit, width=4)
-            d.ellipse([x+7, y+1, x+12, y+6], fill=skin)
+            # Eyes (two small dots)
+            d.rectangle([x-4, y-23, x-2, y-21], fill=(0, 0, 0, 255))
+            d.rectangle([x+2, y-23, x+4, y-21], fill=(0, 0, 0, 255))
 
-            # Spiky Hair
-            ht = y - 24
+            # Arms (down at sides, fists clenched — charge-up)
+            d.line([x-8, y-13, x-12, y+4], fill=suit, width=5)
+            d.ellipse([x-15, y+2, x-9, y+8], fill=skin)  # Left fist
+            d.line([x+8, y-13, x+12, y+4], fill=suit, width=5)
+            d.ellipse([x+9, y+2, x+15, y+8], fill=skin)  # Right fist
+
+            # --- Spiky Hair ---
+            ht = y - 28  # top of head
             if char_stage == 0:
                 d.polygon([
-                    (x-7, ht), (x-5, ht-8), (x-2, ht-4),
-                    (x, ht-14), (x+2, ht-4), (x+5, ht-8),
+                    (x-7, ht), (x-5, ht-10), (x-2, ht-5),
+                    (x, ht-16), (x+2, ht-5), (x+5, ht-10),
                     (x+7, ht)
                 ], fill=h_col)
             elif char_stage == 1:
                 d.polygon([
-                    (x-8, ht), (x-6, ht-12), (x-3, ht-6),
-                    (x, ht-22), (x+3, ht-6), (x+6, ht-12),
-                    (x+8, ht)
+                    (x-9, ht), (x-7, ht-14), (x-3, ht-7),
+                    (x, ht-26), (x+3, ht-7), (x+7, ht-14),
+                    (x+9, ht)
                 ], fill=h_col)
             elif char_stage == 2:
                 if is_char1:
                     d.polygon([
-                        (x-10, ht), (x-8, ht-18), (x-5, ht-10),
-                        (x-2, ht-30), (x, ht-42),
-                        (x+2, ht-30), (x+5, ht-10),
-                        (x+8, ht-18), (x+10, ht)
+                        (x-11, ht), (x-9, ht-20), (x-5, ht-12),
+                        (x-2, ht-34), (x, ht-48),
+                        (x+2, ht-34), (x+5, ht-12),
+                        (x+9, ht-20), (x+11, ht)
                     ], fill=h_col)
-                    for sx in range(-6, 7, 4):
-                        d.line([x+sx, ht, x+sx, y+6], fill=h_col, width=2)
+                    # Long hair strands behind (thin lines, not a rectangle)
+                    for sx in range(-7, 8, 3):
+                        d.line([x+sx, ht, x+sx, y+8], fill=h_col, width=2)
                 else:
                     d.polygon([
-                        (x-8, ht), (x-6, ht-12), (x-3, ht-6),
-                        (x, ht-22), (x+3, ht-6), (x+6, ht-12),
-                        (x+8, ht)
+                        (x-9, ht), (x-7, ht-14), (x-3, ht-7),
+                        (x, ht-26), (x+3, ht-7), (x+7, ht-14),
+                        (x+9, ht)
                     ], fill=h_col)
             elif char_stage >= 3:
                 d.polygon([
-                    (x-7, ht), (x-5, ht-8), (x-2, ht-4),
-                    (x, ht-14), (x+2, ht-4), (x+5, ht-8),
+                    (x-7, ht), (x-5, ht-10), (x-2, ht-5),
+                    (x, ht-16), (x+2, ht-5), (x+5, ht-10),
                     (x+7, ht)
                 ], fill=h_col)
 
         # Static positions in the sky
         c1_x = W // 2 - 200
         c2_x = W // 2 + 200
-        wy = SKY_H - 50
+        wy = SKY_H - 55
 
         draw_warrior(c1_x, wy, stage, True, frame)
         c2_stage = 1 if stage == 2 else stage
