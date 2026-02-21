@@ -352,37 +352,37 @@ def draw_scene(season, frame, W=1200, H=320):
             ht = y - 28
             if char_stage == 0:
                 d.polygon([
-                    (x-7, ht), (x-5, ht-10), (x-2, ht-5),
-                    (x, ht-16), (x+2, ht-5), (x+5, ht-10),
-                    (x+7, ht)
+                    (x-6, ht), (x-4, ht-10), (x-1, ht-5),
+                    (x, ht-16), (x+1, ht-5), (x+4, ht-10),
+                    (x+6, ht)
                 ], fill=h_col)
             elif char_stage == 1:
                 d.polygon([
-                    (x-9, ht), (x-7, ht-14), (x-3, ht-7),
-                    (x, ht-26), (x+3, ht-7), (x+7, ht-14),
-                    (x+9, ht)
+                    (x-6, ht), (x-5, ht-14), (x-2, ht-7),
+                    (x, ht-26), (x+2, ht-7), (x+5, ht-14),
+                    (x+6, ht)
                 ], fill=h_col)
             elif char_stage == 2:
                 if is_char1:
                     d.polygon([
-                        (x-11, ht), (x-9, ht-20), (x-5, ht-12),
-                        (x-2, ht-34), (x, ht-48),
-                        (x+2, ht-34), (x+5, ht-12),
-                        (x+9, ht-20), (x+11, ht)
+                        (x-6, ht), (x-5, ht-20), (x-3, ht-12),
+                        (x-1, ht-34), (x, ht-48),
+                        (x+1, ht-34), (x+3, ht-12),
+                        (x+5, ht-20), (x+6, ht)
                     ], fill=h_col)
-                    for sx in range(-7, 8, 3):
+                    for sx in range(-5, 6, 3):
                         d.line([x+sx, ht, x+sx, y+8], fill=h_col, width=2)
                 else:
                     d.polygon([
-                        (x-9, ht), (x-7, ht-14), (x-3, ht-7),
-                        (x, ht-26), (x+3, ht-7), (x+7, ht-14),
-                        (x+9, ht)
+                        (x-6, ht), (x-5, ht-14), (x-2, ht-7),
+                        (x, ht-26), (x+2, ht-7), (x+5, ht-14),
+                        (x+6, ht)
                     ], fill=h_col)
             elif char_stage >= 3:
                 d.polygon([
-                    (x-7, ht), (x-5, ht-10), (x-2, ht-5),
-                    (x, ht-16), (x+2, ht-5), (x+5, ht-10),
-                    (x+7, ht)
+                    (x-6, ht), (x-4, ht-10), (x-1, ht-5),
+                    (x, ht-16), (x+1, ht-5), (x+4, ht-10),
+                    (x+6, ht)
                 ], fill=h_col)
 
         # Static positions in the sky
