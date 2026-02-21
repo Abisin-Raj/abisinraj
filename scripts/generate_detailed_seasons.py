@@ -280,83 +280,88 @@ def draw_scene(season, frame, W=1200, H=256):
             d.point((jx-2, jy+6), fill=(255, 255, 255, 255))
 
     # ── 7.6 Couples on slope (spring, summer) ─────────────────────────────────
-    def draw_pixel_heart(cx, cy, size=3, color=(255, 80, 80, 220)):
-        pts = [
-            (-1,-2),(0,-2),(1,-2),
-            (-2,-1),(-1,-1),(0,-1),(1,-1),(2,-1),
-            (-2,0),(-1,0),(0,0),(1,0),(2,0),
-            (-1,1),(0,1),(1,1),
-            (0,2)
+    def draw_pixel_heart(hx, hy, size=2, color=(255, 80, 80, 220)):
+        # 7x6 pixel heart grid, each cell = size×size square
+        pattern = [
+            (1,0),(2,0),(4,0),(5,0),
+            (0,1),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),
+            (0,2),(1,2),(2,2),(3,2),(4,2),(5,2),(6,2),
+            (1,3),(2,3),(3,3),(4,3),(5,3),
+            (2,4),(3,4),(4,4),
+            (3,5),
         ]
-        for px, py in pts:
-            d.point((cx + px*size, cy + py*size), fill=color)
+        for px, py in pattern:
+            rx = hx + (px - 3) * size
+            ry = hy + (py - 3) * size
+            d.rectangle([rx, ry, rx + size - 1, ry + size - 1], fill=color)
 
-    def draw_broken_heart(cx, cy, progress, size=3):
-        # Left half separates left+down, right half separates right+down
-        left_pts  = [(-2,-1),(-1,-2),(-2,0),(-1,-1),(-1,0),(-1,1),(0,2),(0,1),(-1,1)]
-        right_pts = [(2,-1),(1,-2),(2,0),(1,-1),(1,0),(1,1),(0,2),(0,1)]
-        ox = int(progress * size * 3)
-        oy = int(progress * size * 2)
-        fade = int(255 * (1 - progress))
-        col = (255, 80, 80, max(0, fade))
-        for px, py in left_pts:
-            d.point((cx + (px - ox)*size, cy + (py + oy)*size), fill=col)
-        for px, py in right_pts:
-            d.point((cx + (px + ox)*size, cy + (py + oy)*size), fill=col)
+    def draw_broken_heart(hx, hy, progress, size=2):
+        # Left half drifts upper-left, right half drifts upper-right
+        left_half = [(0,0),(1,0),(0,1),(1,1),(2,1),(0,2),(1,2),(2,2),(1,3),(2,3),(2,4)]
+        right_half = [(4,0),(5,0),(3,1),(4,1),(5,1),(6,1),(3,2),(4,2),(5,2),(6,2),(4,3),(5,3),(3,4),(4,4),(3,5)]
+        drift = int(progress * 8 * size)
+        rise  = int(progress * 5 * size)
+        fade  = max(0, int(255 * (1 - progress)))
+        col   = (255, 60, 60, fade)
+        for px, py in left_half:
+            rx = hx + (px - 3) * size - drift
+            ry = hy + (py - 3) * size - rise
+            d.rectangle([rx, ry, rx + size - 1, ry + size - 1], fill=col)
+        for px, py in right_half:
+            rx = hx + (px - 3) * size + drift
+            ry = hy + (py - 3) * size - rise
+            d.rectangle([rx, ry, rx + size - 1, ry + size - 1], fill=col)
 
     if season in ["spring", "summer"]:
-        random.seed(7777)
-        couple_positions = []
-        for _ in range(2):
-            ox = random.randint(100, W * 2)
-            cpx = (ox - shift) % W
-            cpy = ROAD_B + (SLOPE_B - ROAD_B) // 2
+        # Fixed original x positions so each couple drifts past avatar at a known frame
+        couple_origins = [W // 2 + 180, W // 2 + 580]
+        for ci, ox in enumerate(couple_origins):
+            cpx = (ox - shift + W * 4) % W
+            cpy = ROAD_B + (SLOPE_B - ROAD_B) * 2 // 3
 
-            couple_positions.append(cpx)
+            skin_c  = (141, 85, 36, 255)
+            dress_c = (255, 160, 185, 255) if season == "spring" else (255, 215, 100, 255)
+            shirt_c = (80,  110, 200, 255) if season == "spring" else (60,  180, 100, 255)
 
-            skin_c = (141, 85, 36, 255)
-            dress_c  = (255, 160, 185, 255) if season == "spring" else (255, 210, 100, 255)
-            shirt_c  = (100, 120, 210, 255) if season == "spring" else (60, 180, 120, 255)
+            # -- Couple figures --
+            d.rectangle([cpx - 12, cpy - 16, cpx - 5,  cpy], fill=dress_c)
+            d.ellipse  ([cpx - 13, cpy - 26, cpx - 4,  cpy - 16], fill=skin_c)
+            d.rectangle([cpx + 5,  cpy - 16, cpx + 12, cpy], fill=shirt_c)
+            d.ellipse  ([cpx + 3,  cpy - 26, cpx + 13, cpy - 16], fill=skin_c)
 
-            # Person 1 (left)
-            d.rectangle([cpx - 10, cpy - 14, cpx - 4, cpy], fill=dress_c)
-            d.ellipse([cpx - 11, cpy - 22, cpx - 3, cpy - 13], fill=skin_c)
+            # -- Umbrella dome (chord = arc + straight chord, gives flat-bottom dome) --
+            umb_fill  = (255, 190, 210, 240) if season == "spring" else (255, 235, 80, 240)
+            umb_edge  = (220, 100, 140, 255) if season == "spring" else (200, 170, 30, 255)
+            d.chord([cpx - 26, cpy - 54, cpx + 26, cpy - 18],
+                    start=180, end=360, fill=umb_fill, outline=umb_edge)
+            # Scallop bumps along bottom edge of dome
+            for i in range(5):
+                bx = cpx - 20 + i * 10
+                d.ellipse([bx - 4, cpy - 22, bx + 4, cpy - 14], fill=umb_fill, outline=umb_edge)
+            # Handle
+            d.line([cpx, cpy - 18, cpx, cpy - 2], fill=(110, 70, 40, 255), width=2)
 
-            # Person 2 (right)
-            d.rectangle([cpx + 4, cpy - 14, cpx + 10, cpy], fill=shirt_c)
-            d.ellipse([cpx + 3, cpy - 22, cpx + 11, cpy - 13], fill=skin_c)
+            # -- Rising heart from couple: rises 5px per frame, fades out, resets each cycle --
+            h_rise  = (frame * 5) % 40          # 0..35 over 8 frames
+            h_alpha = max(20, 230 - h_rise * 6)
+            h_y     = cpy - 60 - h_rise
+            draw_pixel_heart(cpx, h_y, size=2, color=(255, 80, 110, h_alpha))
 
-            # Umbrella
-            umb_col  = (255, 180, 200, 230) if season == "spring" else (255, 230, 80, 230)
-            d.arc([cpx - 20, cpy - 42, cpx + 20, cpy - 18], start=180, end=0, fill=umb_col, width=3)
-            d.line([cpx, cpy - 18, cpx, cpy - 3], fill=(120, 80, 50, 255), width=2)
-            # Umbrella ribs
-            for ang in [200, 220, 250, 270, 290, 310, 340]:
-                rad = math.radians(ang)
-                d.line([cpx, cpy - 30, cpx + int(20 * math.cos(rad)), cpy - 30 + int(12 * math.sin(rad))],
-                       fill=umb_col, width=1)
-
-            # Floating heart from couple – rises and fades in a loop
-            h_phase = (frame * 3 + id(ox)) % 24
-            h_y = cpy - 48 - h_phase
-            h_alpha = max(30, 255 - h_phase * 9)
-            draw_pixel_heart(cpx, h_y, size=2, color=(255, 80, 100, h_alpha))
-
-        # Heart from avatar when close to a couple
+        # -- Heart from avatar when a couple is near centre --
         avatar_x = W // 2
-        foot_y   = ROAD_B - 4
-        for cpx in couple_positions:
+        foot_y   = ROAD_B - 8
+        for ox in couple_origins:
+            cpx = (ox - shift + W * 4) % W
             dist = abs(cpx - avatar_x)
-            if dist < 80:
-                progress = (80 - dist) / 80.0  # 0→1 as avatar approaches
-                av_heart_y = foot_y - 28 - int(progress * 20)
-
-                if progress > 0.75:
-                    break_progress = (progress - 0.75) / 0.25
-                    draw_broken_heart(avatar_x, av_heart_y, break_progress, size=2)
+            if dist < 70:
+                prox = (70 - dist) / 70.0          # 0→1 as couple crosses avatar
+                av_heart_y = foot_y - 20 - int(prox * 22)
+                if prox >= 0.65:
+                    bp = (prox - 0.65) / 0.35      # 0→1 for break animation
+                    draw_broken_heart(avatar_x, av_heart_y, bp, size=2)
                 else:
                     draw_pixel_heart(avatar_x, av_heart_y, size=2,
-                                     color=(255, 100, 120, int(180 * progress)))
+                                     color=(255, 90, 120, int(240 * prox)))
 
     # ── 8. Avatar ─────────────────────────────────────────────────────────────
 
