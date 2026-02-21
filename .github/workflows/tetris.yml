@@ -26,8 +26,8 @@ jobs:
         run: |
           pip install requests Pillow
           
-      - name: Create dist directory
-        run: mkdir -p dist
+      - name: Create output directories
+        run: mkdir -p dist assets
 
       - name: Generate Tetris GIFs
         run: |

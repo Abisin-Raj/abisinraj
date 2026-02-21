@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw
+from pathlib import Path
 import random
 import os
 import math
@@ -966,10 +967,16 @@ if __name__ == "__main__":
         for i in range(16):
             frames.append(draw_scene(season, i, H=320))
 
-    out = "/home/abisin/Desktop/abisinraj/assets/seasons_walking.gif"
-    os.makedirs(os.path.dirname(out), exist_ok=True)
+    # Save into the repository (works on GitHub Actions and locally)
+    repo_root = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
+    out_path = Path(repo_root) / "assets" / "seasons_walking.gif"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     frames[0].save(
-        out, save_all=True, append_images=frames[1:],
-        optimize=False, duration=180, loop=0
+        out_path.as_posix(),
+        save_all=True,
+        append_images=frames[1:],
+        optimize=False,
+        duration=180,
+        loop=0,
     )
-    print(f"Banner GIF saved → {out}")
+    print(f"Banner GIF saved → {out_path}")
