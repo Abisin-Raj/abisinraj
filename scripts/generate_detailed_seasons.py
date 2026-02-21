@@ -6,8 +6,8 @@ def hex_to_rgb(h):
     h = h.lstrip('#')
     return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 
-# ─── BANNER: 1200 × 128 ───────────────────────────────────────────────────────
-def draw_scene(season, frame, W=1200, H=128):
+# ─── BANNER: 1200 × 256 ───────────────────────────────────────────────────────
+def draw_scene(season, frame, W=1200, H=256):
     img = Image.new("RGBA", (W, H))
     d = ImageDraw.Draw(img)
 
