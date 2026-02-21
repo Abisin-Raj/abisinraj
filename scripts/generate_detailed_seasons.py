@@ -297,15 +297,40 @@ def draw_scene(season, frame, W=1200, H=320):
             # Save random state
             rng_state = random.getstate()
 
-            # Aura (pixelated particles)
+            import math
+            # Aura (Dragon Ball styled flame shapes overlay)
             warrior_id = 1000 if is_char1 else 2000
-            random.seed(f * 13 + warrior_id)
-            aura_count = 10 + char_stage * 8
-            aura_range = 20 + char_stage * 10
-            for _ in range(aura_count):
-                ax = x + random.randint(-aura_range, aura_range)
-                ay = y + random.randint(-aura_range - 25, aura_range)
-                d.rectangle([ax-2, ay-2, ax+1, ay+1], fill=aura_rgb + (90 + char_stage * 15,))
+            random.seed(f * 33 + warrior_id)
+
+            aura_layers = 3 if char_stage >= 2 else 2
+            base_w = 40 + char_stage * 12
+            base_h_up = 65 + char_stage * 25
+            base_h_down = 35 + char_stage * 5
+
+            for layer in range(aura_layers):
+                scale = 1.0 - (layer * 0.35)
+                w = int(base_w * scale)
+                h_up = int(base_h_up * scale)
+                h_down = int(base_h_down * scale)
+                
+                points = []
+                # Left-to-right over the top (jagged flame spikes)
+                for ang in range(180, -1, -20):
+                    rad = math.radians(ang)
+                    spike_mult = random.uniform(0.6, 1.5)
+                    jx = x + w * math.cos(rad)
+                    jy = y - 10 - h_up * spike_mult * math.sin(rad)
+                    points.append((jx, jy))
+                    
+                # Right-to-left across the bottom (smooth bounds underneath feet)
+                for ang in range(360, 180, -25):
+                    rad = math.radians(ang)
+                    bx = x + w * 0.85 * math.cos(rad)
+                    by = y - 10 - h_down * 0.85 * math.sin(rad)
+                    points.append((bx, by + random.randint(-4, 4)))
+                    
+                alpha = 70 + layer * 70
+                d.polygon(points, fill=aura_rgb + (min(255, alpha),))
 
             # Restore random state
             random.setstate(rng_state)
