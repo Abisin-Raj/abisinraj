@@ -938,9 +938,7 @@ def draw_scene(season, frame, W=1200, H=320):
         }
         
         base, extra = hour_data.get(hour, ("Hello visitor.", "Keep on walking."))
-        
-        # Alternate greeting every 8 frames (since we have 16 frames total)
-        greeting = base if frame < 8 else extra
+        greeting = f"{base} {extra}"
             
         # Draw bubble near head
         try:
