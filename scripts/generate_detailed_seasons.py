@@ -277,6 +277,45 @@ def draw_scene(season, frame, W=1200, H=320):
             fy = random.randint(SLOPE_B, H)
             d.point((fx, fy), fill=(139, 69, 19, 80))
             
+        # ── Thor's Hammer (Mjolnir) Easter Egg ──
+        hammer_ox = W // 2 + 150
+        hx = (hammer_ox - shift + W * 4) % W
+        hy = SLOPE_B + 20
+        
+        # Dirt crater/mound around the hammer
+        d.ellipse([hx - 25, hy - 6, hx + 25, hy + 8], fill=(120, 60, 15, 255))
+        d.ellipse([hx - 15, hy - 3, hx + 15, hy + 6], fill=(90, 40, 10, 255))
+        
+        # Mjolnir Head
+        d.polygon([
+            (hx - 10, hy - 10), (hx + 6, hy - 16), 
+            (hx + 14, hy + 2), (hx - 2, hy + 8)
+        ], fill=(160, 160, 160, 255))
+        
+        # Side bevel lighting for 3D effect
+        d.polygon([
+            (hx - 10, hy - 10), (hx - 2, hy + 8),
+            (hx + 2, hy + 6), (hx - 6, hy - 11)
+        ], fill=(120, 120, 120, 255))
+        
+        # Handle pointing UP and slightly RIGHT from the top-center face
+        hx_center, hy_center = hx + 2, hy - 7
+        hx_end, hy_end = hx + 12, hy - 32
+        
+        d.line([(hx_center, hy_center), (hx_end, hy_end)], fill=(90, 45, 10, 255), width=4)
+        
+        # Handle ridges (leather wrap)
+        for i in range(1, 6):
+            lx = hx_center + int((hx_end - hx_center) * (i / 6.0))
+            ly = hy_center + int((hy_end - hy_center) * (i / 6.0))
+            d.line([(lx-3, ly+1), (lx+3, ly-1)], fill=(50, 25, 5, 255), width=1)
+            
+        # Pommel at the top of the handle
+        d.ellipse([hx_end - 3, hy_end - 4, hx_end + 3, hy_end + 2], fill=(180, 180, 180, 255))
+        
+        # Leather strap dangling downwards
+        d.arc([hx_end, hy_end, hx_end + 12, hy_end + 15], start=45, end=250, fill=(100, 50, 10, 255), width=1)
+            
         # ── Flying Warriors ──────────
         stage = min(4, frame // 3)
         hair_colors = [
