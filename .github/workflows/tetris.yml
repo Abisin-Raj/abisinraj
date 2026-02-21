@@ -27,7 +27,7 @@ jobs:
           pip install requests Pillow
           
       - name: Create output directories
-        run: mkdir -p dist assets
+        run: mkdir -p dist
 
       - name: Generate Tetris GIFs
         run: |
@@ -42,7 +42,7 @@ jobs:
         run: |
           ls -l dist/github-contribution-grid-tetris.gif
           ls -l dist/github-contribution-grid-tetris-dark.gif
-          ls -l assets/seasons_walking.gif
+          ls -l dist/seasons_walking.gif
           
       - name: Update README with Cache Buster
         run: |
@@ -54,10 +54,10 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add README.md assets/seasons_walking.gif
+          git add README.md
           # Pull latest changes to avoid push conflicts
           git pull --rebase origin main
-          git commit -m "chore: update GIFs and bust cache [skip ci]" || echo "No changes to commit"
+          git commit -m "chore: update README cache buster [skip ci]" || echo "No changes to commit"
           git push origin main
           
       - name: Push to Output Branch

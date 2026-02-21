@@ -86,9 +86,16 @@ def draw_scene(season, frame, W=1200, H=320):
     
 
     # Sun / Moon
-    if hour >= 20 or hour < 6:
-        # Moon
         d.ellipse([W-55, 10, W-15, 50], fill=(220, 230, 255, 200))
+        # Moon craters
+        rng_state = random.getstate()
+        random.seed(hour + 42)
+        for _ in range(5):
+            cx_offset = random.randint(10, 30)
+            cy_offset = random.randint(10, 30)
+            cr_size = random.randint(2, 5)
+            d.ellipse([W-55+cx_offset-cr_size, 10+cy_offset-cr_size, W-55+cx_offset+cr_size, 10+cy_offset+cr_size], fill=(180, 190, 220, 150))
+        random.setstate(rng_state)
     elif 6 <= hour < 8 or 17 <= hour < 20:
         # Low Sun (Orange/Red)
         sun_y = 10 if hour < 8 else 30
@@ -967,7 +974,7 @@ if __name__ == "__main__":
 
     # Save into the repository (works on GitHub Actions and locally)
     repo_root = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
-    out_path = Path(repo_root) / "assets" / "seasons_walking.gif"
+    out_path = Path(repo_root) / "dist" / "seasons_walking.gif"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     frames[0].save(
         out_path.as_posix(),

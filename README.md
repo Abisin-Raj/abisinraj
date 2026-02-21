@@ -25,7 +25,7 @@ ABISIN RAJ
 </h1>
 
 <div style="margin-top: 20px; text-align: center;">
-  <img src="assets/seasons_walking.gif" alt="Seasons Walking" style="width: 100%; border-radius: 8px; image-rendering: pixelated;" />
+  <img src="https://raw.githubusercontent.com/Abisin-Raj/Abisin-Raj/output-tetris/seasons_walking.gif?v=3" alt="Seasons Walking" style="width: 100%; border-radius: 8px; image-rendering: pixelated;" />
 </div>
 
 </div>
