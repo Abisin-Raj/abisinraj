@@ -279,6 +279,13 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
     # Save as animated GIF
     if len(frames) == 0:
         raise Exception("No frames generated. Check contribution data.")
+        
+    # Ensure output directory exists before saving
+    import os
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        
     frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=True, duration=100, loop=0)
 
 if __name__ == "__main__":
