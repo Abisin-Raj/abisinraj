@@ -656,6 +656,53 @@ def draw_scene(season, frame, W=1200, H=320):
                 h_y     = cpy - 60 - h_rise
                 draw_pixel_heart(cpx, h_y, size=2, color=(255, 80, 110, h_alpha))
 
+        # --- Captain America "On your left" in Summer ---
+        if season == "summer":
+            # Runs very fast across the screen (left to right)
+            cap_x = -150 + frame * 105
+            cap_y = ROAD_B + 10
+            
+            if -50 < cap_x < W + 100:
+                # Legs running (fast)
+                run_t = (frame % 4) / 4.0
+                r_leg_x = 15 * math.sin(run_t * 2 * math.pi)
+                l_leg_x = 15 * math.sin((run_t + 0.5) * 2 * math.pi)
+                
+                d.line([cap_x, cap_y-8, cap_x + int(r_leg_x), cap_y+12], fill=(30, 40, 160, 255), width=7)
+                d.line([cap_x, cap_y-8, cap_x + int(l_leg_x), cap_y+12], fill=(30, 40, 160, 255), width=7)
+                
+                # Boots
+                d.rectangle([cap_x + int(r_leg_x) - 4, cap_y+5, cap_x + int(r_leg_x) + 4, cap_y+12], fill=(160, 30, 30, 255))
+                d.rectangle([cap_x + int(l_leg_x) - 4, cap_y+5, cap_x + int(l_leg_x) + 4, cap_y+12], fill=(160, 30, 30, 255))
+
+                # Body (Blue uniform)
+                d.rectangle([cap_x-9, cap_y-25, cap_x+7, cap_y-8], fill=(30, 40, 160, 255))
+                # Star on chest
+                d.point((cap_x-1, cap_y-18), fill=(255, 255, 255, 255))
+                
+                # Head (Blue helmet)
+                d.ellipse([cap_x-6, cap_y-36, cap_x+6, cap_y-23], fill=(30, 40, 160, 255))
+                d.ellipse([cap_x-4, cap_y-30, cap_x+6, cap_y-23], fill=(255, 210, 170, 255)) # Face peeking out
+                
+                # Shield swinging on the arm facing us
+                shield_x = cap_x + int(8 * math.sin((run_t + 0.25) * 2 * math.pi))
+                shield_y = cap_y - 14
+                d.ellipse([shield_x-9, shield_y-9, shield_x+9, shield_y+9], fill=(200, 30, 30, 255))
+                d.ellipse([shield_x-6, shield_y-6, shield_x+6, shield_y+6], fill=(240, 240, 240, 255))
+                d.ellipse([shield_x-3, shield_y-3, shield_x+3, shield_y+3], fill=(30, 40, 160, 255))
+                d.point((shield_x, shield_y), fill=(255, 255, 255, 255)) # tiny star center
+                
+                # Dialog box "On your left"
+                # Showing it only when he's reasonably close to the center
+                if cap_x > 100 and cap_x < W - 100:
+                    bx = cap_x - 10
+                    by = cap_y - 65
+                    d.rectangle([bx-10, by-8, bx+75, by+10], fill=(255, 255, 255, 200), outline=(0,0,0,150))
+                    # Tail of the speech bubble
+                    d.polygon([(bx+15, by+10), (bx+25, by+10), (bx+10, by+18)], fill=(255, 255, 255, 200))
+                    # Text!
+                    d.text((bx-4, by-4), "On your left.", fill=(0, 0, 0, 255))
+
     # ── 8. Avatar ─────────────────────────────────────────────────────────────
 
     cx   = W // 2
