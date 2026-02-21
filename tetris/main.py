@@ -70,7 +70,7 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
     cell_size = 40
     legend_width = 80
     image_width = width * cell_size + legend_width
-    image_height = height * cell_size + 40  # Reduced height since credits are removed
+    image_height = height * cell_size + 60  # Extra bottom padding so Saturday row isn't clipped
 
     # Theme Configuration
     class Theme(TypedDict):
