@@ -438,17 +438,61 @@ def draw_scene(season, frame, W=1200, H=256):
     # Wire (from walkman to ear cup)
     d.line([wm_x + 2, wm_y, cx + 6, hy2 + 7], fill=(30, 30, 30, 180), width=1)
 
-    # Musical Notes (floating near head)
-    random.seed(frame + 100)
-    for i in range(2):
-        nx_off = 15 + i * 12
-        ny_off = -10 - (frame % 4) * 2 - i * 5
-        nx, ny = cx + nx_off, hy2 + ny_off
-        # Draw a simple note (dot + stem)
-        d.ellipse([nx, ny, nx + 4, ny + 3], fill=(255, 255, 255, 180))
-        d.line([nx + 3, ny + 1, nx + 3, ny - 6], fill=(255, 255, 255, 180), width=1)
-        if i % 2 == 0:
-            d.line([nx + 3, ny - 6, nx + 7, ny - 4], fill=(255, 255, 255, 180), width=1)
+    # Music notes OR breaking heart depending on proximity to couple
+    near_couple = False
+    couple_prox = 0.0
+    if season in ["spring", "summer"]:
+        spd_local = {"spring": 3, "summer": 6}.get(season, 6)
+        couple_origins_check = [W // 2 + 15 * spd_local, W // 2 + 15 * spd_local + 450]
+        shift_check = frame * spd_local
+        for ox_c in couple_origins_check:
+            cpx_c = (ox_c - shift_check + W * 4) % W
+            d_c = abs(cpx_c - cx)
+            if d_c < 90:
+                near_couple = True
+                couple_prox = (90 - d_c) / 90.0
+
+    if near_couple:
+        # Draw breaking heart above head instead of music notes
+        hx = cx + 14
+        hy_base = hy2 - 18 - int(couple_prox * 10)
+        if couple_prox >= 0.55:
+            # Break: left half drifts left+up, right half drifts right+up
+            bp = min(1.0, (couple_prox - 0.55) / 0.45)
+            drift = int(bp * 10)
+            rise  = int(bp * 6)
+            fade  = max(0, int(220 * (1 - bp)))
+            col   = (255, 60, 60, fade)
+            lh = [(0,0),(1,0),(0,1),(1,1),(2,1),(0,2),(1,2),(2,2),(1,3),(2,3),(2,4)]
+            rh = [(4,0),(5,0),(3,1),(4,1),(5,1),(6,1),(3,2),(4,2),(5,2),(6,2),(4,3),(5,3),(3,4),(4,4),(3,5)]
+            for px, py in lh:
+                rx = hx + (px - 3) * 2 - drift
+                ry = hy_base + (py - 3) * 2 - rise
+                d.rectangle([rx, ry, rx + 1, ry + 1], fill=col)
+            for px, py in rh:
+                rx = hx + (px - 3) * 2 + drift
+                ry = hy_base + (py - 3) * 2 - rise
+                d.rectangle([rx, ry, rx + 1, ry + 1], fill=col)
+        else:
+            # Solid heart rising toward the couple
+            alpha = int(220 * couple_prox)
+            pattern = [(1,0),(2,0),(4,0),(5,0),(0,1),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),
+                       (0,2),(1,2),(2,2),(3,2),(4,2),(5,2),(6,2),(1,3),(2,3),(3,3),(4,3),(5,3),
+                       (2,4),(3,4),(4,4),(3,5)]
+            for px, py in pattern:
+                rx = hx + (px - 3) * 2
+                ry = hy_base + (py - 3) * 2
+                d.rectangle([rx, ry, rx + 1, ry + 1], fill=(255, 80, 100, alpha))
+    else:
+        # Normal: music notes float upward
+        for i in range(2):
+            nx_off = 15 + i * 12
+            ny_off = -10 - (frame % 4) * 2 - i * 5
+            nx, ny = cx + nx_off, hy2 + ny_off
+            d.ellipse([nx, ny, nx + 4, ny + 3], fill=(255, 255, 255, 180))
+            d.line([nx + 3, ny + 1, nx + 3, ny - 6], fill=(255, 255, 255, 180), width=1)
+            if i % 2 == 0:
+                d.line([nx + 3, ny - 6, nx + 7, ny - 4], fill=(255, 255, 255, 180), width=1)
 
     if season == "autumn":
         # Bug-catching net
