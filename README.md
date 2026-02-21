@@ -84,8 +84,16 @@ ABISIN RAJ
     <summary style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.25); cursor:pointer; user-select:none;">screenshots</summary>
     <br />
     <!-- Replace the src URLs below with your actual screenshot links from the Abisin-Raj/assets repo -->
-    <img src="" width="100%" style="border-radius:8px; margin-bottom:8px; display:block;" />
-    <img src="" width="100%" style="border-radius:8px; display:block;" />
+    <table style="width:100%; border-collapse:collapse;">
+      <tr>
+        <td style="width:50%; padding-right:6px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+        <td style="width:50%; padding-left:6px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+      </tr>
+      <tr>
+        <td style="width:50%; padding-right:6px; padding-top:8px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+        <td style="width:50%; padding-left:6px; padding-top:8px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+      </tr>
+    </table>
   </details>
 </div>
 
@@ -112,8 +120,16 @@ ABISIN RAJ
     <summary style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.25); cursor:pointer; user-select:none;">screenshots</summary>
     <br />
     <!-- Replace the src URLs below with your actual screenshot links from the Abisin-Raj/assets repo -->
-    <img src="" width="100%" style="border-radius:8px; margin-bottom:8px; display:block;" />
-    <img src="" width="100%" style="border-radius:8px; display:block;" />
+    <table style="width:100%; border-collapse:collapse;">
+      <tr>
+        <td style="width:50%; padding-right:6px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+        <td style="width:50%; padding-left:6px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+      </tr>
+      <tr>
+        <td style="width:50%; padding-right:6px; padding-top:8px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+        <td style="width:50%; padding-left:6px; padding-top:8px;"><img src="" width="100%" style="border-radius:8px; display:block;" /></td>
+      </tr>
+    </table>
   </details>
 </div>
 
