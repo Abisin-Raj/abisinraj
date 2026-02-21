@@ -586,7 +586,7 @@ def draw_scene(season, frame, W=1200, H=320):
                        fill=(200, 230, 255, 150), width=1)
                        
         # ── 7.5 River Activities ──────────────────────────────────────────────────
-        if season in ["spring", "summer"]:
+        if season in ["spring", "summer"] and (5 <= hour < 20):
             # People fishing
             random.seed(999) 
             for _ in range(3):
@@ -658,7 +658,7 @@ def draw_scene(season, frame, W=1200, H=320):
                 ry = hy + (py - 3) * size - rise
                 d.rectangle([rx, ry, rx + size - 1, ry + size - 1], fill=col)
 
-        if season in ["spring", "summer"]:
+        if season in ["spring", "summer"] and (5 <= hour < 20):
             # Fixed couples: one crosses avatar mid-animation, other stays right of screen
             couple_origins = [W // 2 + 15 * spd, W // 2 + 15 * spd + 450]
             for ci, ox in enumerate(couple_origins):
@@ -950,6 +950,11 @@ def draw_scene(season, frame, W=1200, H=320):
         d.polygon([(cx, by + bubble_h), (cx + 10, by + bubble_h), (cx + 5, by + bubble_h + 6)], fill=(255, 255, 255, 220))
         # Text
         d.text((bx + 5, by + 2), greeting, fill=(0, 0, 0, 255))
+
+    # ── Final Atmosphere Overlay ──
+    if atmosphere_tint[3] > 0:
+        overlay = Image.new("RGBA", (W, H), atmosphere_tint)
+        img = Image.alpha_composite(img, overlay)
 
     return img
 
