@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw
 import random
+import os
 import math
 from datetime import datetime
 
@@ -966,6 +967,7 @@ if __name__ == "__main__":
             frames.append(draw_scene(season, i, H=320))
 
     out = "/home/abisin/Desktop/abisinraj/assets/seasons_walking.gif"
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     frames[0].save(
         out, save_all=True, append_images=frames[1:],
         optimize=False, duration=180, loop=0
