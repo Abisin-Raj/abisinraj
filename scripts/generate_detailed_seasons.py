@@ -25,6 +25,9 @@ def draw_scene(season, frame, W=1200, H=256):
         "winter":  dict(sky="#B0C4DE", mtn="#708090", road="#A9A9A9",
                         grass="#E8F4F8", shade="#AFEEEE", trunk="#2F4F4F",
                         leaf="#D0E8F0", river="#B0E0E6", flower="#FFFFFF"),
+        "wasteland": dict(sky="#FFD39B", mtn="#A0522D", road="#D2B48C",
+                          grass="#C5A059", shade="#8B4513", trunk="#8B4513",
+                          leaf="#556B2F", river="#A0522D", flower="#8B4513"),
     }
     c = {k: hex_to_rgb(v) for k, v in P[season].items()}
 
@@ -41,6 +44,13 @@ def draw_scene(season, frame, W=1200, H=256):
 
     # ── 1. Sky ────────────────────────────────────────────────────────────────
     d.rectangle([0, 0, W, SKY_H], fill=c["sky"] + (255,))
+
+    if season == "wasteland":
+        # Arid haze
+        for y in range(0, SKY_H, 4):
+            alpha = int(100 * (1 - y/SKY_H))
+            d.rectangle([0, y, W, y+4], fill=(255, 100, 0, alpha))
+    
 
     # Sun / Moon
     if season == "winter":
@@ -75,43 +85,67 @@ def draw_scene(season, frame, W=1200, H=256):
     random.seed(11)
     mx = -60
     while mx < W + 60:
-        ph = 28 + random.randint(-6, 6)
-        bw = 65 + random.randint(0, 25)
-        d.polygon([(mx, SKY_H), (mx + bw//2, SKY_H - ph), (mx + bw, SKY_H)],
-                  fill=c["mtn"] + (255,))
-        mx += int(bw * 0.65)
-
-    # ── 3. Trees (parallax ×0.5) ──────────────────────────────────────────────
+        if season == "wasteland":
+            # Rock Pillars and Plateaus
+            random.seed(mx + 500)
+            if random.random() > 0.6: # Plateau
+                pw = random.randint(150, 300)
+                ph = random.randint(40, 70)
+                d.rectangle([mx, SKY_H - ph, mx + pw, SKY_H], fill=c["mtn"] + (255,))
+                # Jagged top
+                for j in range(mx, mx + pw, 10):
+                    jy = SKY_H - ph - random.randint(0, 5)
+                    d.rectangle([j, jy, j+10, SKY_H - ph], fill=c["mtn"] + (255,))
+                mx += pw
+            else: # Pillar
+                pw = random.randint(30, 60)
+                ph = random.randint(80, 150)
+                d.rectangle([mx, SKY_H - ph, mx + pw, SKY_H], fill=c["mtn"] + (255,))
+                mx += pw + random.randint(50, 100)
+        else:
+            ph = 28 + random.randint(-6, 6)
+            bw = 65 + random.randint(0, 25)
+            d.polygon([(mx, SKY_H), (mx + bw//2, SKY_H - ph), (mx + bw, SKY_H)],
+                      fill=c["mtn"] + (255,))
+            mx += int(bw * 0.65)
+     # ── 3. Trees/Flora (parallax ×0.5) ──────────────────────────────────────────────
     t_scroll = frame * (spd // 2 if season == "spring" else 4)
     random.seed(99)
     n_trees = W // 10
     if season == "spring":
-        n_trees = W // 25  # Fewer trees for a more open, serene sakura park feel
+        n_trees = W // 25
+    elif season == "wasteland":
+        n_trees = W // 40 # Sparse vegetation
+
     for _ in range(n_trees):
         ox = random.randint(-60, W + 350)
         tx = ox - t_scroll
         if not (-25 < tx < W + 25):
             continue
         ty = ROAD_T + random.randint(-6, 8)
-        tw, th = 13, 36
+        
+        if season == "wasteland":
+            # Cacti
+            d.rectangle([tx, ty-20, tx+4, ty], fill=(40, 100, 40, 255))
+            if random.random() > 0.5:
+                # Arm
+                d.rectangle([tx+4, ty-15, tx+10, ty-12], fill=(40, 100, 40, 255))
+                d.rectangle([tx+8, ty-18, tx+12, ty-12], fill=(40, 100, 40, 255))
+        else:
+            tw, th = 13, 36
+            d.rectangle([tx, ty - th, tx + tw, ty], fill=c["trunk"] + (255,))
+            lc = c["leaf"] + (255,)
+            d.ellipse([tx-9, ty-th-16, tx+tw//2+1, ty-th+1], fill=lc)
+            d.ellipse([tx+tw//2-6, ty-th-16, tx+tw+9, ty-th+1], fill=lc)
+            d.ellipse([tx-3, ty-th-27, tx+tw+3, ty-th-4], fill=lc)
 
-        d.rectangle([tx, ty - th, tx + tw, ty], fill=c["trunk"] + (255,))
-        lc = c["leaf"] + (255,)
-        d.ellipse([tx-9, ty-th-16, tx+tw//2+1, ty-th+1], fill=lc)
-        d.ellipse([tx+tw//2-6, ty-th-16, tx+tw+9, ty-th+1], fill=lc)
-        d.ellipse([tx-3, ty-th-27, tx+tw+3, ty-th-4], fill=lc)
-
-        # Spring: falling petals (local to tree)
-        if season == "spring":
-            # Use a stable seed for positions but add a slow falling offset
-            random.seed(abs(int(ox)) * 7) # Fixed seed based on tree's original position
-            for _ in range(4):
-                # Petals fall slowly: (frame * 2) pixels down
-                px = tx + random.randint(-40, 60) - (frame * 0.5)
-                py = ty - random.randint(-10, 40) + (frame * 1.5)
-                d.point((int(px), int(py)), fill=(255, 105, 180, 200))
-
-    # ── 4. Season-specific atmosphere ─────────────────────────────────────────
+            if season == "spring":
+                random.seed(abs(int(ox)) * 7)
+                for _ in range(4):
+                    px = tx + random.randint(-40, 60) - (frame * 0.5)
+                    py = ty - random.randint(-10, 40) + (frame * 1.5)
+                    d.point((int(px), int(py)), fill=(255, 105, 180, 200))
+     # ── 4. Season-specific atmosphere ─────────────────────────────────────────
 
     # SPRING – Very slow wind lines + pink petals
     if season == "spring":
@@ -177,8 +211,16 @@ def draw_scene(season, frame, W=1200, H=256):
             sx = random.randint(0, W)
             sy = (random.randint(0, H) + frame * 3) % H
             d.point((sx, sy), fill=(255, 255, 255, 220))
-
-    # ── 5. Road ───────────────────────────────────────────────────────────────
+            
+    # WASTELAND – Dust Storm
+    elif season == "wasteland":
+        random.seed(frame * 2)
+        for _ in range(W // 10):
+            dx = random.randint(0, W)
+            dy = random.randint(0, H)
+            size = random.randint(1, 3)
+            d.rectangle([dx, dy, dx+size, dy+1], fill=(210, 180, 140, 100))
+     # 5. Road ───────────────────────────────────────────────────────────────
     d.rectangle([0, ROAD_T, W, ROAD_B], fill=c["road"] + (255,))
     random.seed(123)
     for _ in range(W * 2):
@@ -203,7 +245,7 @@ def draw_scene(season, frame, W=1200, H=256):
                     fill=(int(r*(1-si)), int(g*(1-si)), int(b*(1-si)), 255))
     d.line([0, ROAD_B, W, ROAD_B], fill=(200, 200, 200, 90), width=1)
 
-    if season != "winter":
+    if season not in ["winter", "wasteland"]:
         random.seed(42)
         for _ in range(W // 4):
             ox = random.randint(0, W)
@@ -211,6 +253,13 @@ def draw_scene(season, frame, W=1200, H=256):
             fx = (ox - shift) % W
             d.rectangle([fx, fy, fx+2, fy+2], fill=c["flower"] + (255,))
             d.line([fx+5, fy, fx+5, fy-4], fill=c["shade"] + (255,), width=1)
+    elif season == "wasteland":
+        # Sand texture
+        random.seed(shift)
+        for _ in range(W // 2):
+            fx = random.randint(0, W)
+            fy = random.randint(ROAD_B, SLOPE_B)
+            d.point((fx, fy), fill=(139, 69, 19, 100))
     else:
         # Snow on slope
         random.seed(77)
@@ -220,7 +269,83 @@ def draw_scene(season, frame, W=1200, H=256):
             fx = (ox - shift) % W
             d.point((fx, fy), fill=(255, 255, 255, 200))
 
-    # ── 7. River ──────────────────────────────────────────────────────────────
+    if season == "wasteland": # No river in wasteland
+        d.rectangle([0, SLOPE_B, W, H], fill=c["road"] + (255,))
+        random.seed(77)
+        for _ in range(W // 2):
+            fx = random.randint(0, W)
+            fy = random.randint(SLOPE_B, H)
+            d.point((fx, fy), fill=(139, 69, 19, 80))
+        # ── Fighting Warriors ──────────
+        stage = min(4, frame // 3)
+        hair_colors = [
+            (255, 255, 0, 255),   # Yellow
+            (255, 255, 0, 255),   # Yellow
+            (255, 255, 0, 255),   # Yellow
+            (255, 60, 60, 255),   # Red
+            (60, 160, 255, 255),  # Blue
+        ]
+        
+        def draw_warrior(x, y, char_stage, is_char1, f):
+            direction = 1 if is_char1 else -1
+            suit = (255, 120, 0, 255) if is_char1 else (0, 80, 200, 255)
+            skin = (255, 210, 170, 255)
+            h_col = hair_colors[char_stage]
+            
+            # Leg movement
+            leg_y = y + abs(math.sin(f * 0.8) * 4)
+            d.rectangle([x-5, y-15, x+5, y], fill=suit) # Body
+            d.ellipse([x-5, y-25, x+5, y-15], fill=skin) # Head
+            
+            # Hair transformation logic
+            if char_stage == 0: # 1st Yellow (Short)
+                d.polygon([(x-6, y-25), (x+6, y-25), (x-4, y-34), (x, y-38), (x+4, y-34)], fill=h_col)
+            elif char_stage == 1: # 2nd Yellow (Slightly longer)
+                d.polygon([(x-7, y-25), (x+7, y-25), (x-6, y-38), (x, y-44), (x+6, y-38)], fill=h_col)
+            elif char_stage == 2: # 3rd Yellow (Even longer for Char 1)
+                if is_char1:
+                    d.polygon([(x-8, y-25), (x+8, y-25), (x-9, y-45), (x, y-55), (x+9, y-45)], fill=h_col)
+                    # Long hair down the back
+                    d.rectangle([x-10, y-25, x-4, y+5], fill=h_col)
+                else: # Char 2 stays at stage 1
+                    d.polygon([(x-7, y-25), (x+7, y-25), (x-6, y-38), (x, y-44), (x+6, y-38)], fill=h_col)
+            elif char_stage >= 3: # 4th Red / 5th Blue (Normal length)
+                d.polygon([(x-6, y-25), (x+6, y-25), (x-4, y-34), (x, y-38), (x+4, y-34)], fill=h_col)
+
+            # Punching animation
+            atk = (f % 4) < 2
+            if atk:
+                d.line([x+direction*5, y-18, x+direction*28, y-18], fill=skin, width=4)
+            else:
+                d.line([x+direction*5, y-18, x+direction*12, y-10], fill=skin, width=4)
+
+            # Aura (sparks)
+            random.seed(f + x)
+            for _ in range(5):
+                ax = x + random.randint(-20, 20)
+                ay = y - random.randint(0, 50)
+                d.point((ax, ay), fill=h_col)
+
+        # Draw the two warriors fighting in the center
+        cx = W // 2
+        wy = ROAD_B - 5
+        
+        # Char 1 stage
+        c1_stage = stage
+        # Char 2 stage (doesn't have 3rd yellow)
+        c2_stage = stage
+        if stage == 2:
+            c2_stage = 1 # Skip Super Long for char 2
+            
+        draw_warrior(cx - 40 + (frame % 4), wy, c1_stage, True, frame)
+        draw_warrior(cx + 40 - (frame % 4), wy, c2_stage, False, frame)
+        
+        # Clashing shockwaves
+        if (frame % 4) < 2:
+            d.ellipse([cx-15, wy-30, cx+15, wy+10], outline=(255, 255, 255, 150), width=2)
+
+        return img # Return early for wasteland to skip river/avatar/couples
+     # 7. River ──────────────────────────────────────────────────────────────
     d.rectangle([0, SLOPE_B, W, H], fill=c["river"] + (255,))
     rflow = 0 if season == "winter" else frame * 10
     random.seed(55)
@@ -494,7 +619,7 @@ def draw_scene(season, frame, W=1200, H=256):
 
 if __name__ == "__main__":
     frames = []
-    for season in ["spring", "summer", "autumn", "winter"]:
+    for season in ["spring", "summer", "autumn", "winter", "wasteland"]:
         for i in range(16):
             frames.append(draw_scene(season, i))
 
