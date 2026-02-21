@@ -294,46 +294,7 @@ def draw_scene(season, frame, W=1200, H=320):
             aura_rgb = h_col[:3]
             dr = force_dir if force_dir is not None else (1 if is_char1 else -1)
 
-            # Save random state
-            rng_state = random.getstate()
-
-            import math
-            # Aura (Dragon Ball styled flame shapes overlay)
-            warrior_id = 1000 if is_char1 else 2000
-            random.seed(f * 33 + warrior_id)
-
-            aura_layers = 3 if char_stage >= 2 else 2
-            base_w = 40 + char_stage * 12
-            base_h_up = 65 + char_stage * 25
-            base_h_down = 35 + char_stage * 5
-
-            for layer in range(aura_layers):
-                scale = 1.0 - (layer * 0.35)
-                w = int(base_w * scale)
-                h_up = int(base_h_up * scale)
-                h_down = int(base_h_down * scale)
-                
-                points = []
-                # Left-to-right over the top (jagged flame spikes)
-                for ang in range(180, -1, -20):
-                    rad = math.radians(ang)
-                    spike_mult = random.uniform(0.6, 1.5)
-                    jx = x + w * math.cos(rad)
-                    jy = y - 10 - h_up * spike_mult * math.sin(rad)
-                    points.append((jx, jy))
-                    
-                # Right-to-left across the bottom (smooth bounds underneath feet)
-                for ang in range(360, 180, -25):
-                    rad = math.radians(ang)
-                    bx = x + w * 0.85 * math.cos(rad)
-                    by = y - 10 - h_down * 0.85 * math.sin(rad)
-                    points.append((bx, by + random.randint(-4, 4)))
-                    
-                alpha = 70 + layer * 70
-                d.polygon(points, fill=aura_rgb + (min(255, alpha),))
-
-            # Restore random state
-            random.setstate(rng_state)
+            # Aura removed by user request
 
             # --- FIGHTING STANCE (MUSCULAR, VARIED POSES) ---
             pose = (f // 3 + (1 if is_char1 else 0)) % 3
@@ -388,18 +349,7 @@ def draw_scene(season, frame, W=1200, H=320):
             # Head
             d.ellipse([x-6, y-28, x+6, y-16], fill=skin)
 
-            # Expression (Angry eyes, yelling mouth)
-            # Eyes (slanted down toward the center)
-            if dr > 0:  # facing right
-                d.line([x-2, y-24, x+1, y-23], fill=(0,0,0,255), width=1) # left eye
-                d.line([x+3, y-23, x+5, y-24], fill=(0,0,0,255), width=1) # right eye
-            else:       # facing left
-                d.line([x-5, y-24, x-3, y-23], fill=(0,0,0,255), width=1) # left eye
-                d.line([x-1, y-23, x+2, y-24], fill=(0,0,0,255), width=1) # right eye
-            
-            # Mouth (open yell)
-            mx0, mx1 = sorted([x+dr*1, x+dr*3])
-            d.rectangle([mx0, y-19, mx1, y-17], fill=(50, 0, 0, 255))
+
 
             if pose == 0:
                 # Forward arm (punching forward — thick)
