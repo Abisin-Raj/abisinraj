@@ -29,6 +29,11 @@ jobs:
       - name: Create output directories
         run: mkdir -p dist
 
+      - name: Reset any local changes
+        run: |
+          git reset --hard
+          git clean -fdx
+          
       - name: Generate Tetris GIFs
         run: |
             python3 tetris/main.py --username Abisin-Raj --theme light --output dist/github-contribution-grid-tetris.gif || { echo "Failed to generate light theme GIF"; exit 1; }
@@ -55,8 +60,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add README.md
-          # Pull latest changes to avoid push conflicts
-          git pull --rebase origin main
+          # Pull latest changes with autostash to avoid conflicts with modified README
+          git pull --rebase --autostash origin main
           git commit -m "chore: update README cache buster [skip ci]" || echo "No changes to commit"
           git push origin main
           

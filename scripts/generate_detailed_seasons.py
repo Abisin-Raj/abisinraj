@@ -86,6 +86,8 @@ def draw_scene(season, frame, W=1200, H=320):
     
 
     # Sun / Moon
+    if hour >= 20 or hour < 6:
+        # Moon
         d.ellipse([W-55, 10, W-15, 50], fill=(220, 230, 255, 200))
         # Moon craters
         rng_state = random.getstate()
