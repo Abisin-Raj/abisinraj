@@ -329,11 +329,6 @@ def draw_scene(season, frame, W=1200, H=320):
                 (x+8, y+4), (x-8, y+4)       # narrower waist
             ], fill=suit)
 
-            # Chest/Pecs lines (for muscle definition)
-            d.line([x-8, y-10, x, y-6], fill=(0,0,0,100), width=2)
-            d.line([x+8, y-10, x, y-6], fill=(0,0,0,100), width=2)
-            d.line([x, y-6, x, y], fill=(0,0,0,100), width=2) # abs line
-
             # Shoulder pads (deltoids)
             d.ellipse([x-18, y-20, x-8, y-10], fill=suit)
             d.ellipse([x+8, y-20, x+18, y-10], fill=suit)
