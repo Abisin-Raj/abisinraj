@@ -292,18 +292,12 @@ def draw_scene(season, frame, W=1200, H=320):
             skin = (255, 210, 170, 255)
             h_col = hair_colors[char_stage]
             aura_rgb = h_col[:3]
-            dir = 1 if is_char1 else -1
-
-            # Detect color change frame: flash the whole body
-            is_flash = (f % 3 == 0 and f > 0)  # frame 3,6,9,12
-            if is_flash:
-                suit = h_col
-                skin = h_col[:3] + (200,)
+            dr = 1 if is_char1 else -1
 
             # Save random state
             rng_state = random.getstate()
 
-            # Aura
+            # Aura (pixelated particles)
             warrior_id = 1000 if is_char1 else 2000
             random.seed(f * 13 + warrior_id)
             aura_count = 10 + char_stage * 8
@@ -313,27 +307,23 @@ def draw_scene(season, frame, W=1200, H=320):
                 ay = y + random.randint(-aura_range - 25, aura_range)
                 d.rectangle([ax-2, ay-2, ax+1, ay+1], fill=aura_rgb + (90 + char_stage * 15,))
 
-            # Ground glow
-            glow_w = 12 + char_stage * 6
-            glow_a = 40 + char_stage * 20
-            d.ellipse([x - glow_w, y + 18, x + glow_w, y + 24],
-                      fill=aura_rgb + (min(180, glow_a),))
-
             # Restore random state
             random.setstate(rng_state)
 
             # --- FIGHTING STANCE ---
-            # Front leg (bent forward)
-            d.line([x+dir*3, y+2, x+dir*14, y+14], fill=suit, width=6)
-            d.line([x+dir*14, y+14, x+dir*18, y+22], fill=suit, width=5)
-            d.rectangle([x+dir*15, y+21, x+dir*22, y+26], fill=(30, 30, 30, 255))  # Boot
+            # Front leg (bent forward toward opponent)
+            d.line([x+dr*3, y+2, x+dr*14, y+14], fill=suit, width=6)
+            d.line([x+dr*14, y+14, x+dr*18, y+22], fill=suit, width=5)
+            bx0, bx1 = sorted([x+dr*15, x+dr*22])
+            d.rectangle([bx0, y+21, bx1, y+26], fill=(30, 30, 30, 255))
 
             # Back leg (extended behind)
-            d.line([x-dir*3, y+2, x-dir*12, y+16], fill=suit, width=6)
-            d.line([x-dir*12, y+16, x-dir*10, y+24], fill=suit, width=5)
-            d.rectangle([x-dir*13, y+23, x-dir*6, y+28], fill=(30, 30, 30, 255))  # Boot
+            d.line([x-dr*3, y+2, x-dr*12, y+16], fill=suit, width=6)
+            d.line([x-dr*12, y+16, x-dr*10, y+24], fill=suit, width=5)
+            bx2, bx3 = sorted([x-dr*13, x-dr*6])
+            d.rectangle([bx2, y+23, bx3, y+28], fill=(30, 30, 30, 255))
 
-            # Torso (slightly angled)
+            # Torso
             d.rectangle([x-8, y-16, x+8, y+2], fill=suit)
 
             # Head
@@ -344,15 +334,15 @@ def draw_scene(season, frame, W=1200, H=320):
             d.rectangle([x+2, y-24, x+4, y-22], fill=(0, 0, 0, 255))
 
             # Forward arm (punching forward)
-            d.line([x+dir*8, y-13, x+dir*24, y-11], fill=suit, width=5)
-            fx0, fx1 = sorted([x+dir*23, x+dir*29])
-            d.ellipse([fx0, y-14, fx1, y-8], fill=skin)  # Fist
+            d.line([x+dr*8, y-13, x+dr*24, y-11], fill=suit, width=5)
+            fx0, fx1 = sorted([x+dr*23, x+dr*29])
+            d.ellipse([fx0, y-14, fx1, y-8], fill=skin)
 
             # Guard arm (bent, guarding chest)
-            d.line([x-dir*8, y-13, x-dir*12, y-6], fill=suit, width=5)
-            d.line([x-dir*12, y-6, x-dir*6, y-2], fill=suit, width=4)
-            gx0, gx1 = sorted([x-dir*8, x-dir*3])
-            d.ellipse([gx0, y-4, gx1, y+1], fill=skin)  # Fist
+            d.line([x-dr*8, y-13, x-dr*12, y-6], fill=suit, width=5)
+            d.line([x-dr*12, y-6, x-dr*6, y-2], fill=suit, width=4)
+            gx0, gx1 = sorted([x-dr*8, x-dr*3])
+            d.ellipse([gx0, y-4, gx1, y+1], fill=skin)
 
             # --- Spiky Hair ---
             ht = y - 28
