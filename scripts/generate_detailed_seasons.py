@@ -658,9 +658,9 @@ def draw_scene(season, frame, W=1200, H=320):
 
         # --- Captain America "On your left" in Summer ---
         if season == "summer":
-            # Running across the screen from left to right, passing the avatar
-            cap_x = 100 + frame * 50
-            cap_y = ROAD_B - 20  # Positioned slightly behind the avatar (on his left)
+            # Running very fast across the screen, passing the avatar
+            cap_x = -400 + frame * 160
+            cap_y = ROAD_B + 40  # Well in the foreground (passed on the left)
             
             # Legs running (fast sprint pace)
             run_t = (frame % 4) / 4.0
