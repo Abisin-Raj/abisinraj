@@ -7,7 +7,7 @@ def hex_to_rgb(h):
     return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 
 # ─── BANNER: 1200 × 256 ───────────────────────────────────────────────────────
-def draw_scene(season, frame, W=1200, H=256):
+def draw_scene(season, frame, W=1200, H=320):
     img = Image.new("RGBA", (W, H))
     d = ImageDraw.Draw(img)
 
@@ -32,10 +32,10 @@ def draw_scene(season, frame, W=1200, H=256):
     c = {k: hex_to_rgb(v) for k, v in P[season].items()}
 
     # ── Layout ────────────────────────────────────────────────────────────────
-    SKY_H   = int(H * 0.30)   # 0–38
-    ROAD_T  = SKY_H            # 38
-    ROAD_B  = int(H * 0.50)   # 64
-    SLOPE_B = int(H * 0.75)   # 96
+    SKY_H   = int(H * 0.40)   # Increased sky for flying warriors
+    ROAD_T  = SKY_H            
+    ROAD_B  = int(H * 0.60)   
+    SLOPE_B = int(H * 0.80)   
 
     spd = 6
     if season == "spring":
@@ -292,52 +292,69 @@ def draw_scene(season, frame, W=1200, H=256):
             skin = (255, 210, 170, 255)
             h_col = hair_colors[char_stage]
             
-            # Hovering movement
-            hover = math.sin(f * 0.5 + (0 if is_char1 else math.pi)) * 5
-            wy = y + hover
+            # Hovering movement (static in air means no X move, but subtle Y bobbing is nice)
+            wy = y + math.sin(f * 0.4 + (0 if is_char1 else math.pi)) * 4
+            dir = 1 if is_char1 else -1
+
+            # 1. Aura (Back layer - wider)
+            random.seed(f + x + 100)
+            for _ in range(12):
+                ax = x + random.randint(-25, 25)
+                ay = wy - random.randint(-15, 55)
+                d.rectangle([ax-2, ay-2, ax+2, ay+2], fill=h_col[:3] + (100,))
+
+            # 2. Lower Body (Legs in fighting stance)
+            # Belt/Sash
+            d.rectangle([x-6, wy-2, x+6, wy+2], fill=(40, 40, 40, 255))
+            # Left Leg (Diagonal)
+            d.line([x-3, wy, x-12, wy+15], fill=suit, width=7)
+            d.rectangle([x-15, wy+15, x-8, wy+20], fill=(20, 20, 20, 255)) # Boot
+            # Right Leg (Diagonal)
+            d.line([x+3, wy, x+12, wy+15], fill=suit, width=7)
+            d.rectangle([x+8, wy+15, x+15, wy+20], fill=(20, 20, 20, 255)) # Boot
+
+            # 3. Upper Body
+            d.rectangle([x-7, wy-16, x+7, wy-2], fill=suit) # Torso
+            d.ellipse([x-6, wy-27, x+6, wy-16], fill=skin) # Head
+
+            # 4. Arms & Hands (Fighting Stance)
+            # Front arm (bent)
+            d.line([x+dir*7, wy-14, x+dir*18, wy-10], fill=suit, width=5)
+            h1x0, h1x1 = (x+dir*17, x+dir*23) if dir > 0 else (x+dir*23, x+dir*17)
+            d.ellipse([h1x0, wy-12, h1x1, wy-6], fill=skin) # Hand/Fist
             
-            d.rectangle([x-5, wy-15, x+5, wy], fill=suit) # Body
-            d.ellipse([x-5, wy-25, x+5, wy-15], fill=skin) # Head
-            
-            # Hair transformation logic
+            # Back arm (raised)
+            d.line([x-dir*7, wy-14, x-dir*15, wy-24], fill=suit, width=5)
+            h2x0, h2x1 = (x-dir*17, x-dir*11) if dir < 0 else (x-dir*11, x-dir*17)
+            d.ellipse([h2x0, wy-28, h2x1, wy-22], fill=skin) # Hand/Fist
+
+            # 5. Hair
             if char_stage == 0: # 1st Yellow (Short)
-                d.polygon([(x-6, wy-25), (x+6, wy-25), (x-4, wy-34), (x, wy-38), (x+4, wy-34)], fill=h_col)
+                d.polygon([(x-7, wy-26), (x+7, wy-26), (x-5, wy-36), (x, wy-42), (x+5, wy-36)], fill=h_col)
             elif char_stage == 1: # 2nd Yellow (Slightly longer)
-                d.polygon([(x-7, wy-25), (x+7, wy-25), (x-6, wy-38), (x, wy-44), (x+6, wy-38)], fill=h_col)
+                d.polygon([(x-8, wy-26), (x+8, wy-26), (x-7, wy-40), (x, wy-48), (x+7, wy-40)], fill=h_col)
             elif char_stage == 2: # 3rd Yellow (Even longer for Char 1)
                 if is_char1:
-                    d.polygon([(x-8, wy-25), (x+8, wy-25), (x-9, wy-45), (x, wy-55), (x+9, wy-45)], fill=h_col)
-                    d.rectangle([x-10, wy-25, x-4, wy+5], fill=h_col)
+                    # Massive spiky hair
+                    d.polygon([(x-10, wy-26), (x+10, wy-26), (x-12, wy-55), (x, wy-65), (x+12, wy-55)], fill=h_col)
+                    d.rectangle([x-12, wy-26, x+12, wy+15], fill=h_col) # Hair reaches down
                 else: 
-                    d.polygon([(x-7, wy-25), (x+7, wy-25), (x-6, wy-38), (x, wy-44), (x+6, wy-38)], fill=h_col)
+                    d.polygon([(x-8, wy-26), (x+8, wy-26), (x-7, wy-40), (x, wy-48), (x+7, wy-40)], fill=h_col)
             elif char_stage >= 3: # 4th Red / 5th Blue
-                d.polygon([(x-6, wy-25), (x+6, wy-25), (x-4, wy-34), (x, wy-38), (x+4, wy-34)], fill=h_col)
+                d.polygon([(x-7, wy-26), (x+7, wy-26), (x-5, wy-36), (x, wy-42), (x+5, wy-36)], fill=h_col)
 
-            # Arms (relaxed/flight pose)
-            d.line([x-7, wy-12, x-10, wy-2], fill=skin, width=3)
-            d.line([x+7, wy-12, x+10, wy-2], fill=skin, width=3)
-
-            # Pixelated Aura
-            random.seed(f + x)
-            for _ in range(8):
-                ax = x + random.randint(-22, 22)
-                ay = wy - random.randint(-5, 45)
-                # Drawing small rectangles for pixelated look
-                d.rectangle([ax-1, ay-1, ax+1, ay+1], fill=h_col)
-
-        # Draw the two warriors flying around in the sky
-        wy_base = SKY_H - 40
-        # Gentle flight paths
-        c1_x = (W // 2 - 150) + math.cos(frame * 0.3) * 60
-        c2_x = (W // 2 + 150) + math.sin(frame * 0.3) * 60
+        # Draw the two warriors flying static in the sky
+        wy_base = SKY_H - 60
+        c1_x = W // 2 - 180
+        c2_x = W // 2 + 180
         
         c1_stage = stage
         c2_stage = stage
         if stage == 2:
             c2_stage = 1
             
-        draw_warrior(c1_x, wy_base + math.sin(frame*0.2)*20, c1_stage, True, frame)
-        draw_warrior(c2_x, wy_base + math.cos(frame*0.2)*20, c2_stage, False, frame)
+        draw_warrior(c1_x, wy_base, c1_stage, True, frame)
+        draw_warrior(c2_x, wy_base, c2_stage, False, frame)
     
     if season != "wasteland":
         # ── 7. River ──────────────────────────────────────────────────────────────
@@ -619,7 +636,7 @@ if __name__ == "__main__":
     frames = []
     for season in ["spring", "summer", "autumn", "winter", "wasteland"]:
         for i in range(16):
-            frames.append(draw_scene(season, i))
+            frames.append(draw_scene(season, i, H=320))
 
     out = "/home/abisin/Desktop/abisinraj/assets/seasons_walking.gif"
     frames[0].save(

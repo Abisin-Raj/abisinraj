@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/abisin/Desktop/abisinraj/scripts/generate_detailed_seasons.py", line 639, in <module>
+    frames.append(draw_scene(season, i, H=320))
+                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/abisin/Desktop/abisinraj/scripts/generate_detailed_seasons.py", line 356, in draw_scene
+    draw_warrior(c1_x, wy_base, c1_stage, True, frame)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/abisin/Desktop/abisinraj/scripts/generate_detailed_seasons.py", line 329, in draw_warrior
+    d.ellipse([h2x0, wy-28, h2x1, wy-22], fill=skin) # Hand/Fist
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/site-packages/PIL/ImageDraw.py", line 220, in ellipse
+    self.draw.draw_ellipse(xy, fill_ink, 1)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+ValueError: x1 must be greater than or equal to x0
