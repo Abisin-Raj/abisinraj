@@ -99,14 +99,16 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
     # Initialize grid with background color index (0)
     grid: List[List[int]] = [[0] * height for _ in range(width)]
 
-    # Prepare batches by color level
-    batches: List[List[Tuple[int, int, int]]] = [[] for _ in range(6)]
+    # Map counts to color index (0-5)
+    # 0 -> 0, 1-10 -> 1, 11-20 -> 2, 21-30 -> 3, 31-40 -> 4, 41+ -> 5
+    grid: List[List[int]] = [[0] * height for _ in range(width)]
+    coord_to_val = {}
+    
     for i, (date, count) in enumerate(contributions):
         week = i // 7
         day = i % 7
-        if week >= width: break
+        if week >= width: continue
         
-        # Map count to color index (0-5)
         if count == 0: val = 0
         elif count <= 10: val = 1
         elif count <= 20: val = 2
@@ -114,11 +116,14 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
         elif count <= 40: val = 4
         else: val = 5
         
+        grid[week][day] = val
         if date:
-            batches[val].append((week, day, val))
-        else:
-            # Padding elements just fill the grid immediately
-            grid[week][day] = val
+            coord_to_val[(week, day)] = val
+
+    # Print debug info for the last 14 days
+    print("Debug - Last 14 days:")
+    for ds, c in contributions[-14:]:
+        print(f"  {ds}: {c}")
 
     # Pre-calculate month labels to avoid slow datetime parsing in animation loop
     month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -171,19 +176,24 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
         if fixed not in fixed_shapes:
             fixed_shapes.append(fixed)
 
-    # Place level-0 directly to avoid animating empty squares (save time)
-    for bx, by, v in batches[0]:
-        grid[bx][by] = v
-
+    # Reset grid for animation (background stays)
+    # Background (val 0) is placed immediately, non-zero pieces fall
+    animated_grid = [[0] * height for _ in range(width)]
     assigned = [[False]*height for _ in range(width)]
-    for bx, by, _ in batches[0]:
-        assigned[bx][by] = True # Don't form pieces from background zeros
+    
+    # Fill level 0 in animated_grid and mark assigned
+    for wx in range(width):
+        for dy in range(height):
+            if (wx, dy) not in coord_to_val or coord_to_val[(wx, dy)] == 0:
+                animated_grid[wx][dy] = grid[wx][dy]
+                assigned[wx][dy] = True
 
     final_pieces = []
     for x in range(width):
+        # We process from bottom-up (Saturday to Sunday) to prioritize pieces at the bottom
         for y in range(height-1, -1, -1):
             if assigned[x][y]: continue
-            placed = False
+            
             for shape in fixed_shapes:
                 valid = True
                 for dx, dy in shape:
@@ -191,22 +201,21 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
                     if nx < 0 or nx >= width or ny < 0 or ny >= height or assigned[nx][ny]:
                         valid = False
                         break
+                
                 if valid:
                     shape_cells = []
                     for dx, dy in shape:
-                        assigned[x+dx][y+dy] = True
-                        # Find the color value for this cell
-                        cell_val = 1
-                        for l in range(1, 6):
-                            for cx, cy, cv in batches[l]:
-                                if cx == x+dx and cy == y+dy: cell_val = cv
-                        shape_cells.append((x+dx, y+dy, cell_val))
+                        nx, ny = x+dx, y+dy
+                        assigned[nx][ny] = True
+                        cell_val = coord_to_val.get((nx, ny), 1)
+                        shape_cells.append((nx, ny, cell_val))
+                    
                     final_pieces.append({
                         "cells": shape_cells,
                         "min_y": min(c[1] for c in shape_cells),
                         "max_y": max(c[1] for c in shape_cells),
                         "min_x": min(c[0] for c in shape_cells),
-                        "start_frame": x * 2  # Cascade from left to right!
+                        "start_frame": x * 2
                     })
                     break
 
@@ -222,7 +231,7 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
         img = Image.new('RGB', (image_width, image_height), background_color)
         draw = ImageDraw.Draw(img)
         draw_legend(draw, cell_size, image_width, image_height, username, year_range, theme_colors, month_labels)
-        draw_grid(draw, grid, cell_size, colors, theme_colors)
+        draw_grid(draw, animated_grid, cell_size, colors, theme_colors)
         
         for p in final_pieces:
             if frame >= p["start_frame"]:
@@ -230,9 +239,9 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
                     p["curr_y_offset"] += 1
                     moved_any = True
                 elif p["curr_y_offset"] == 0 and not p.get("landed"):
-                    # Just landed, add to background grid
+                    # Just landed, add to animated grid
                     for cx, cy, cv in p["cells"]:
-                        grid[cx][cy] = cv
+                        animated_grid[cx][cy] = cv
                     p["landed"] = True
                     moved_any = True
         
@@ -256,7 +265,7 @@ def create_tetris_gif(username: str, year: int, contributions: List[Tuple[Option
     # Save as animated GIF
     if len(frames) == 0:
         raise Exception("No frames generated. Check contribution data.")
-    frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=80, loop=0)
+    frames[0].save(output_path, save_all=True, append_images=frames[1:], optimize=False, duration=100, loop=0)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate a GitHub contributions Tetris GIF.')
