@@ -42,7 +42,7 @@ ABISIN RAJ
     margin:auto;
     text-align:center;
 ">
-  <img height="160" src="https://github-readme-stats.vercel.app/api?username=Abisin-Raj&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=c9d1d9&icon_color=58a6ff&text_color=8b949e&rank_icon=github" />
+  <img height="160" src="https://github-readme-stats-fast.vercel.app/api?username=Abisin-Raj&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=c9d1d9&icon_color=58a6ff&text_color=8b949e&rank_icon=github" />
   &nbsp;&nbsp;
   <img height="160" src="https://streak-stats.demolab.com/?user=Abisin-Raj&theme=tokyonight&hide_border=true&background=0d1117&ring=58a6ff&fire=ff6b6b&currStreakLabel=c9d1d9" />
 </div>
@@ -60,7 +60,7 @@ ABISIN RAJ
     margin:auto;
     text-align:center;
 ">
-  <img width="100%" src="https://github-readme-stats.vercel.app/api/wakatime?username=Abisin-Raj&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=c9d1d9&text_color=8b949e&layout=compact" />
+  <img width="100%" src="https://github-readme-stats-fast.vercel.app/api/wakatime?username=Abisin-Raj&theme=tokyonight&hide_border=true&bg_color=0d1117&title_color=c9d1d9&text_color=8b949e&layout=compact" />
 </div>
 
 <div style="margin-top:40px;"></div>
